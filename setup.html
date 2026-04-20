@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建人格模型 - 数星</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 返回按钮 -->
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            返回首页
+        </a>
+
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-user-astronaut"></i>
+                <h1>创建人格模型</h1>
+            </div>
+            <p class="tagline">让我们了解TA，才能更好地陪伴你</p>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="setup-card">
+                <!-- 进度指示 -->
+                <div class="progress">
+                    <div class="progress-step active">
+                        <div class="step-number">1</div>
+                        <div class="step-label">星座选择</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">2</div>
+                        <div class="step-label">MBTI选择</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">3</div>
+                        <div class="step-label">聊天记录</div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">4</div>
+                        <div class="step-label">完成</div>
+                    </div>
+                </div>
+
+                <!-- 星座选择 -->
+                <div class="setup-section active" id="zodiac-section">
+                    <h2><i class="fas fa-star-and-crescent"></i> 选择TA的星座</h2>
+                    <p class="section-description">星座反映了一个人的基本性格特征</p>
+                    
+                    <div class="zodiac-grid" id="zodiac-grid">
+                        <!-- 星座选项将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="selected-preview" id="zodiac-preview" style="display: none;">
+                        <h3>已选择：<span id="selected-zodiac"></span></h3>
+                        <p id="zodiac-description"></p>
+                    </div>
+                </div>
+
+                <!-- MBTI选择 -->
+                <div class="setup-section" id="mbti-section" style="display: none;">
+                    <h2><i class="fas fa-brain"></i> 选择TA的MBTI类型</h2>
+                    <p class="section-description">MBTI揭示了思维模式和沟通风格</p>
+                    
+                    <div class="mbti-grid" id="mbti-grid">
+                        <!-- MBTI选项将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="selected-preview" id="mbti-preview" style="display: none;">
+                        <h3>已选择：<span id="selected-mbti"></span></h3>
+                        <p id="mbti-description"></p>
+                    </div>
+                </div>
+
+                <!-- 聊天记录输入 -->
+                <div class="setup-section" id="chat-section" style="display: none;">
+                    <h2><i class="fas fa-comment-dots"></i> 分享聊天记录</h2>
+                    <p class="section-description">这能帮助我们更好地模仿TA的说话风格</p>
+                    
+                    <div class="chat-input-container">
+                        <div class="input-header">
+                            <h3>粘贴一段你们的对话</h3>
+                            <div class="input-tips">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>建议选择有代表性的对话，能体现TA的说话习惯</span>
+                            </div>
+                        </div>
+                        
+                        <textarea 
+                            id="chat-history" 
+                            placeholder="例如：
+你：今天过得怎么样？
+TA：还不错呀～工作有点忙，但晚上可以放松一下
+你：想我了吗？
+TA：当然想啦，你这个小傻瓜 😊
+...
+（请删除敏感信息，保留语气词和表情）"
+                            rows="8"
+                        ></textarea>
+                        
+                        <div class="input-footer">
+                            <div class="char-count">
+                                <span id="char-count">0</span> / 1000 字符
+                            </div>
+                            <div class="input-actions">
+                                <button class="btn btn-secondary" id="clear-chat">
+                                    <i class="fas fa-trash-alt"></i>
+                                    清空
+                                </button>
+                                <button class="btn btn-secondary" id="sample-chat">
+                                    <i class="fas fa-magic"></i>
+                                    示例
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="privacy-notice">
+                        <i class="fas fa-lock"></i>
+                        <p>你的聊天记录仅用于分析语言风格，不会保存或分享给任何人</p>
+                    </div>
+                </div>
+
+                <!-- 完成页面 -->
+                <div class="setup-section" id="complete-section" style="display: none;">
+                    <h2><i class="fas fa-check-circle"></i> 人格模型创建完成！</h2>
+                    
+                    <div class="personality-summary">
+                        <div class="summary-item">
+                            <h3>星座特征</h3>
+                            <p id="summary-zodiac">未选择</p>
+                        </div>
+                        <div class="summary-item">
+                            <h3>MBTI类型</h3>
+                            <p id="summary-mbti">未选择</p>
+                        </div>
+                        <div class="summary-item">
+                            <h3>语言风格</h3>
+                            <p id="summary-style">等待分析...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="personality-insight">
+                        <h3><i class="fas fa-lightbulb"></i> 人格洞察</h3>
+                        <p id="personality-insight-text">基于你的选择，我们正在分析TA的人格特征...</p>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" id="edit-model">
+                            <i class="fas fa-edit"></i>
+                            修改模型
+                        </button>
+                        <button class="btn btn-primary" id="start-chat">
+                            <i class="fas fa-comments"></i>
+                            开始对话
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 导航按钮 -->
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" id="prev-btn" style="display: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        上一步
+                    </button>
+                    <button class="btn btn-primary" id="next-btn">
+                        下一步
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>每一步选择都让我们更懂你，也更懂如何陪伴你</p>
+        </footer>
+    </div>
+
+    <!-- 星光背景 -->
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="stars3"></div>
+
+    <script src="js/main.js"></script>
+    <script src="js/setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话陪伴 - 数星</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 返回按钮 -->
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            返回首页
+        </a>
+
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-comments"></i>
+                <h1>对话陪伴</h1>
+            </div>
+            <p class="tagline">选择你需要的陪伴方式</p>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 模式选择卡片 -->
+            <div class="mode-selection">
+                <div class="mode-card" id="companion-mode">
+                    <div class="mode-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>陪伴对话模式</h3>
+                    <p class="mode-description">
+                        模拟TA的聊天风格，给你温暖的陪伴
+                    </p>
+                    <div class="mode-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>基于星座+MBTI的性格特征</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>提取聊天记录中的语言风格</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>温暖治愈的日常对话</span>
+                        </div>
+                    </div>
+                    <button class="mode-select-btn">
+                        开始陪伴对话
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="mode-card" id="counseling-mode">
+                    <div class="mode-icon">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h3>情感咨询模式</h3>
+                    <p class="mode-description">
+                        专业的情感复盘，帮你理清思绪
+                    </p>
+                    <div class="mode-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>情感经历深度分析</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>基于星座+MBTI的针对性建议</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>疗愈路径规划</span>
+                        </div>
+                    </div>
+                    <button class="mode-select-btn">
+                        开始情感咨询
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 对话界面（默认隐藏） -->
+            <div class="chat-interface" id="chat-interface" style="display: none;">
+                <!-- 对话头部 -->
+                <div class="chat-header">
+                    <div class="chat-mode-info">
+                        <i class="fas fa-heart" id="mode-icon"></i>
+                        <div>
+                            <h3 id="mode-title">陪伴对话模式</h3>
+                            <p class="persona-info" id="persona-info">
+                                基于<span id="zodiac-display">白羊座</span> + <span id="mbti-display">ENFP</span>的性格特征
+                            </p>
+                        </div>
+                    </div>
+                    <button class="mode-switch-btn" id="switch-mode-btn">
+                        <i class="fas fa-exchange-alt"></i>
+                        切换模式
+                    </button>
+                </div>
+
+                <!-- 对话区域 -->
+                <div class="chat-area">
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- 系统欢迎消息 -->
+                        <div class="message system-message">
+                            <div class="message-content">
+                                <p>你好！我是根据你设置的人格特征创建的陪伴AI。我会尽力用TA的风格和你对话，给你温暖的陪伴。</p>
+                                <p class="message-tip">你可以随时点击右上角的"切换模式"按钮，切换到情感咨询模式。</p>
+                            </div>
+                            <div class="message-time">现在</div>
+                        </div>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="input-area">
+                        <div class="input-container">
+                            <textarea 
+                                id="message-input" 
+                                placeholder="在这里输入你想说的话..." 
+                                rows="1"
+                                maxlength="500"></textarea>
+                            <div class="input-actions">
+                                <div class="char-count">
+                                    <span id="char-count">0</span>/500
+                                </div>
+                                <button class="send-btn" id="send-btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                    发送
+                                </button>
+                            </div>
+                        </div>
+                        <div class="quick-replies" id="quick-replies">
+                            <button class="quick-reply" data-text="今天心情不太好...">今天心情不太好...</button>
+                            <button class="quick-reply" data-text="我想聊聊我们之间的事">我想聊聊我们之间的事</button>
+                            <button class="quick-reply" data-text="我该怎么走出来？">我该怎么走出来？</button>
+                            <button class="quick-reply" data-text="能陪我说说话吗？">能陪我说说话吗？</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对话控制 -->
+                <div class="chat-controls">
+                    <button class="control-btn" id="clear-chat-btn">
+                        <i class="fas fa-trash-alt"></i>
+                        清空对话
+                    </button>
+                    <button class="control-btn" id="export-chat-btn">
+                        <i class="fas fa-download"></i>
+                        导出对话
+                    </button>
+                    <button class="control-btn" id="help-btn">
+                        <i class="fas fa-question-circle"></i>
+                        使用帮助
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部信息 -->
+        <footer class="footer">
+            <p class="disclaimer">
+                <i class="fas fa-exclamation-circle"></i>
+                重要提示：本服务为情感陪伴工具，非专业心理咨询。如有严重心理困扰，请寻求专业帮助。
+            </p>
+            <p class="copyright">
+                &copy; 2026 数星 - 再陪我数次星星
+            </p>
+        </footer>
+    </div>
+
+    <!-- 模态框：使用帮助 -->
+    <div class="modal" id="help-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> 使用帮助</h3>
+                <button class="modal-close" id="close-help-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4><i class="fas fa-heart"></i> 陪伴对话模式</h4>
+                    <p>这个模式会模拟你设置的人格特征（星座+MBTI）进行日常对话。适合需要温暖陪伴、日常聊天的场景。</p>
+                    <ul>
+                        <li>回复会基于人格特征调整语气和用词</li>
+                        <li>会提取你提供的聊天记录中的语言风格</li>
+                        <li>重点是情感支持和日常陪伴</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4><i class="fas fa-hands-helping"></i> 情感咨询模式</h4>
+                    <p>这个模式会基于你的人格特征提供情感分析和建议。适合需要理性分析、情感复盘、寻求建议的场景。</p>
+                    <ul>
+                        <li>会分析情感问题的根源和模式</li>
+                        <li>提供基于人格特征的针对性建议</li>
+                        <li>重点是理性分析和成长建议</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4><i class="fas fa-lightbulb"></i> 使用建议</h4>
+                    <ul>
+                        <li>可以随时切换两种模式，满足不同需求</li>
+                        <li>使用"快速回复"按钮可以快速开始对话</li>
+                        <li>对话内容仅保存在本地浏览器，保护隐私</li>
+                        <li>如有需要，可以导出对话记录</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/chat.js"></script>
+</body>
+</html>
