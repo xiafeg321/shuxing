@@ -1,254 +1,198 @@
-// 数星 - 主JavaScript文件
+/**
+ * 数星 - 主页面脚本（优化版）
+ * 首页交互 + 星光背景 + 状态管理
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化应用
-    initApp();
-    
-    // 绑定事件
+    initStars();
+    initUI();
+    checkSetupStatus();
     bindEvents();
-    
-    // 添加更多随机星星
-    createStars();
 });
 
-// 初始化应用
-function initApp() {
-    console.log('数星应用初始化...');
+// ===== 星光背景系统（V2 — 更丰富的星群效果） =====
+function initStars() {
+    const container = document.getElementById('stars-container');
+    if (!container) return;
     
-    // 检查本地存储
-    checkLocalStorage();
+    const starCount = window.innerWidth < 768 ? 30 : 50;
+    const colors = ['rgba(124,138,255,', 'rgba(168,178,255,', 'rgba(255,138,118,', 'rgba(255,179,160,'];
+    const sizes = [2, 3, 4];
     
-    // 显示欢迎消息
-    showWelcomeMessage();
+    container.innerHTML = '';
     
-    // 检查人格模型设置
-    checkPersonaSetup();
-}
-
-// 绑定事件
-function bindEvents() {
-    // 了解更多按钮
-    const learnMoreBtn = document.getElementById('learnMore');
-    if (learnMoreBtn) {
-        learnMoreBtn.addEventListener('click', toggleInstructions);
-    }
-    
-    // 为所有按钮添加点击效果
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // 添加点击效果
-            this.style.transform = 'scale(0.98)';
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 150);
-            
-            // 如果是开始按钮，记录点击时间
-            if (this.classList.contains('btn-primary')) {
-                recordStartTime();
-            }
-        });
-    });
-    
-    // 为功能卡片添加悬停效果
-    const features = document.querySelectorAll('.feature');
-    features.forEach(feature => {
-        feature.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-        });
-        
-        feature.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-}
-
-// 切换使用说明显示
-function toggleInstructions() {
-    const instructions = document.getElementById('instructions');
-    const learnMoreBtn = document.getElementById('learnMore');
-    
-    if (instructions.style.display === 'none' || instructions.style.display === '') {
-        instructions.style.display = 'block';
-        learnMoreBtn.innerHTML = '<i class="fas fa-times-circle"></i> 收起说明';
-        learnMoreBtn.classList.remove('btn-secondary');
-        learnMoreBtn.classList.add('btn-primary');
-        
-        // 滚动到说明区域
-        instructions.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else {
-        instructions.style.display = 'none';
-        learnMoreBtn.innerHTML = '<i class="fas fa-info-circle"></i> 了解更多';
-        learnMoreBtn.classList.remove('btn-primary');
-        learnMoreBtn.classList.add('btn-secondary');
-    }
-}
-
-// 检查本地存储
-function checkLocalStorage() {
-    const lastVisit = localStorage.getItem('lastVisit');
-    const now = new Date().toISOString();
-    
-    if (!lastVisit) {
-        // 第一次访问
-        localStorage.setItem('firstVisit', now);
-        console.log('欢迎第一次访问数星！');
-    }
-    
-    localStorage.setItem('lastVisit', now);
-}
-
-// 显示欢迎消息
-function showWelcomeMessage() {
-    const firstVisit = localStorage.getItem('firstVisit');
-    
-    if (firstVisit) {
-        const visitDate = new Date(firstVisit);
-        const today = new Date();
-        const diffTime = Math.abs(today - visitDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) {
-            console.log('欢迎回来！这是你使用数星的第二天。');
-        } else if (diffDays > 1) {
-            console.log(`欢迎回来！这是你使用数星的第${diffDays}天。`);
-        }
-    }
-}
-
-// 记录开始时间
-function recordStartTime() {
-    const startTime = new Date().toISOString();
-    localStorage.setItem('lastStartTime', startTime);
-    
-    // 增加启动次数
-    let startCount = parseInt(localStorage.getItem('startCount') || '0');
-    startCount++;
-    localStorage.setItem('startCount', startCount.toString());
-    
-    console.log(`第${startCount}次开始使用数星`);
-}
-
-// 创建随机星星
-function createStars() {
-    const starsContainer = document.querySelector('.stars');
-    const stars2Container = document.querySelector('.stars2');
-    const stars3Container = document.querySelector('.stars3');
-    
-    if (!starsContainer || !stars2Container || !stars3Container) return;
-    
-    // 为每个容器创建星星
-    createStarsForContainer(starsContainer, 15);
-    createStarsForContainer(stars2Container, 10);
-    createStarsForContainer(stars3Container, 8);
-}
-
-function createStarsForContainer(container, count) {
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < starCount; i++) {
         const star = document.createElement('div');
-        star.className = 'star';
+        star.className = 'star-point';
         
-        // 随机位置
-        const left = Math.random() * 100;
-        const top = Math.random() * 100;
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        const colorBase = colors[Math.floor(Math.random() * colors.length)];
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const dur = 4 + Math.random() * 6;
+        const delay = Math.random() * 8;
+        const opacity = 0.2 + Math.random() * 0.4;
         
-        // 随机大小
-        const size = Math.random() * 3 + 1;
-        
-        // 随机透明度
-        const opacity = Math.random() * 0.5 + 0.2;
-        
-        // 随机动画延迟
-        const delay = Math.random() * 5;
-        
-        star.style.cssText = `
-            position: absolute;
-            left: ${left}%;
-            top: ${top}%;
-            width: ${size}px;
-            height: ${size}px;
-            background: linear-gradient(135deg, #8a8dff, #6c9bcf);
-            border-radius: 50%;
-            opacity: ${opacity};
-            animation: twinkle ${Math.random() * 3 + 2}s infinite;
-            animation-delay: ${delay}s;
-        `;
+        Object.assign(star.style, {
+            left: x + '%',
+            top: y + '%',
+            width: size + 'px',
+            height: size + 'px',
+            background: colorBase + opacity + ')',
+            '--float-dur': dur + 's',
+            '--float-delay': delay + 's',
+            animationDelay: delay + 's',
+            animationDuration: dur + 's'
+        });
         
         container.appendChild(star);
     }
+    
+    // 添加一些大星星
+    for (let i = 0; i < 5; i++) {
+        const big = document.createElement('div');
+        big.className = 'star-point';
+        const x = 10 + Math.random() * 80;
+        const y = 10 + Math.random() * 80;
+        Object.assign(big.style, {
+            left: x + '%',
+            top: y + '%',
+            width: '6px',
+            height: '6px',
+            background: `rgba(255, 255, 255, ${0.3 + Math.random() * 0.3})`,
+            boxShadow: '0 0 8px rgba(124,138,255,0.3)',
+            '--float-dur': (8 + Math.random() * 4) + 's',
+            '--float-delay': (Math.random() * 10) + 's',
+            animationDelay: (Math.random() * 10) + 's',
+            animationDuration: (8 + Math.random() * 4) + 's'
+        });
+        container.appendChild(big);
+    }
 }
 
-// 工具函数：格式化日期
-function formatDate(date) {
-    return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
+// ===== 首页UI交互 =====
+function initUI() {
+    const learnMoreBtn = document.getElementById('learnMore');
+    const instructions = document.getElementById('instructions');
+    
+    if (learnMoreBtn && instructions) {
+        learnMoreBtn.addEventListener('click', function() {
+            if (instructions.style.display === 'none' || !instructions.style.display) {
+                instructions.style.display = 'block';
+                instructions.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                this.innerHTML = '<i class="fas fa-times"></i><span>收起说明</span>';
+            } else {
+                instructions.style.display = 'none';
+                this.innerHTML = '<i class="fas fa-info-circle"></i><span>了解更多</span>';
+            }
+        });
+    }
+}
+
+// ===== 检查并显示已设置的状态 =====
+function checkSetupStatus() {
+    const statusEl = document.getElementById('setup-status');
+    const setupBtn = document.getElementById('setup-btn');
+    const chatBtn = document.getElementById('start-chat-btn');
+    const personaEl = document.getElementById('current-persona');
+    
+    try {
+        const saved = localStorage.getItem('shuxing_user_settings');
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.zodiac && data.mbti) {
+                // 获取星座名称
+                const zodiacNames = {
+                    '白羊': '白羊座', '金牛': '金牛座', '双子': '双子座',
+                    '巨蟹': '巨蟹座', '狮子': '狮子座', '处女': '处女座',
+                    '天秤': '天秤座', '天蝎': '天蝎座', '射手': '射手座',
+                    '摩羯': '摩羯座', '水瓶': '水瓶座', '双鱼': '双鱼座'
+                };
+                const zName = zodiacNames[data.zodiac] || data.zodiac;
+                
+                if (statusEl) statusEl.style.display = 'flex';
+                if (personaEl) personaEl.textContent = `${zName} · ${data.mbti || ''}`;
+                if (setupBtn) setupBtn.textContent = '重新设置';
+                if (chatBtn) chatBtn.style.display = 'inline-flex';
+                
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('读取设置失败:', e);
+    }
+    
+    // 未设置：隐藏已设置提示，显示创建按钮
+    if (statusEl) statusEl.style.display = 'none';
+    if (chatBtn) chatBtn.style.display = 'none';
+    if (setupBtn) setupBtn.innerHTML = '<i class="fas fa-user-astronaut"></i><span>创建人格模型</span>';
+}
+
+// ===== 事件绑定 =====
+function bindEvents() {
+    // 窗口大小变化时重新生成星星
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(initStars, 500);
+    });
+    
+    // 按钮点击涟漪效果
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-effect';
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            this.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+    
+    // 所有渐入动画元素
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '50px' });
+        observer.observe(el);
     });
 }
 
-// 工具函数：获取时间问候
-function getTimeGreeting() {
-    const hour = new Date().getHours();
-    
-    if (hour >= 5 && hour < 12) {
-        return '早上好';
-    } else if (hour >= 12 && hour < 14) {
-        return '中午好';
-    } else if (hour >= 14 && hour < 18) {
-        return '下午好';
-    } else if (hour >= 18 && hour < 22) {
-        return '晚上好';
-    } else {
-        return '夜深了';
-    }
-}
-
-// 检查人格模型设置
-function checkPersonaSetup() {
-    const savedSettings = localStorage.getItem('shuxing_user_settings');
-    const startChatBtn = document.getElementById('start-chat-btn');
-    const setupStatus = document.getElementById('setup-status');
-    const currentPersona = document.getElementById('current-persona');
-    
-    if (savedSettings) {
-        try {
-            const settings = JSON.parse(savedSettings);
-            if (settings.zodiac && settings.mbti) {
-                // 已设置人格模型
-                if (startChatBtn) startChatBtn.style.display = 'inline-block';
-                if (setupStatus) setupStatus.style.display = 'block';
-                if (currentPersona) {
-                    currentPersona.textContent = `${settings.zodiac}座 · ${settings.mbti}`;
-                }
-                console.log('人格模型已设置:', settings.zodiac, settings.mbti);
-            }
-        } catch (error) {
-            console.error('解析人格设置失败:', error);
+// ===== 涟漪效果样式（动态注入） =====
+(function injectRippleStyle() {
+    if (document.getElementById('ripple-style')) return;
+    const style = document.createElement('style');
+    style.id = 'ripple-style';
+    style.textContent = `
+        .btn { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
         }
-    }
-}
-
-// 导出函数供其他页面使用
-window.appUtils = {
-    formatDate,
-    getTimeGreeting,
-    recordStartTime
-};
-
-// 添加CSS动画定义
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes twinkle {
-        0%, 100% { opacity: 0.3; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.2); }
-    }
-    
-    .star {
-        pointer-events: none;
-    }
-`;
-document.head.appendChild(style);
-
-console.log('数星应用加载完成！');
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .animate-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    `;
+    document.head.appendChild(style);
+})();
