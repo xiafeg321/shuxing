@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initUI();
     checkSetupStatus();
     bindEvents();
+    
+    // 启动星空特效（首页专属）
+    const container = document.getElementById('stars-container');
+    if (container && window.StarEffects) {
+        StarEffects.start(container);
+    }
 });
 
 // ===== 星光背景系统（V2 — 更丰富的星群效果） =====

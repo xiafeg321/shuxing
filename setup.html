@@ -209,6 +209,13 @@
         </footer>
     </div>
 
+    <script src="js/star-effects.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('stars-container');
+            if (container && window.StarEffects) StarEffects.start(container);
+        });
+    </script>
     <script src="js/setup.js"></script>
 </body>
 </html>

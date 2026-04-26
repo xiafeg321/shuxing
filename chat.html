@@ -166,6 +166,16 @@
         </div>
     </div>
 
+    <script src="js/star-effects.js"></script>
+    <script>
+        // chat页面加载流星特效（模式选择页）
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('stars-container');
+            if (container && window.StarEffects) {
+                StarEffects.start(container);
+            }
+        });
+    </script>
     <script src="js/chat.js"></script>
 </body>
 </html>

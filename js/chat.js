@@ -296,6 +296,17 @@ document.addEventListener('DOMContentLoaded', function() {
         loadChatHistory();
         updateCharCount();
         checkSetup();
+        updatePlaceholder();
+        
+        // 已设置人格模型 → 自动显示模式选择，而非直接进入
+        // （让用户有选择权，但增加视觉提示引导快速进入）
+        if (userSettings.zodiac && userSettings.mbti && modeSelection) {
+            // 显示快捷进入提示
+            const hint = document.createElement('div');
+            hint.style.cssText = 'text-align:center;padding:8px 16px;background:linear-gradient(135deg,#f0f2ff,#fafbff);border-radius:12px;margin-top:-8px;margin-bottom:8px;font-size:0.85rem;color:var(--text-secondary);';
+            hint.innerHTML = '✨ 已加载人格模型，选择模式即可开始对话';
+            modeSelection.insertBefore(hint, modeSelection.querySelector('.mode-cards'));
+        }
     }
     
     function loadSettings() {
@@ -374,14 +385,48 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chatInterface) chatInterface.style.display = 'block';
         updateModeDisplay();
         
-        // 发送模式转换的欢迎语
-        let msg = mode === 'companion'
-            ? (userSettings.zodiac && userSettings.mbti 
-                ? `我是根据你设置的人格特征（${PERSONALITY.zodiac[userSettings.zodiac]?.name} · ${userSettings.mbti}）生成的陪伴AI~ 我会用TA的风格和你聊天，有什么想说的都可以告诉我哦`
-                : '你好呀~ 我会陪着你聊天的，想说什么都行')
-            : (userSettings.zodiac && userSettings.mbti
-                ? `欢迎来到情感咨询。基于你提供的${PERSONALITY.zodiac[userSettings.zodiac]?.name}和${userSettings.mbti}人格特征，我可以帮你分析情感问题。你愿意和我说说你的情况吗？`
-                : '欢迎来到情感咨询。你可以和我说说你的情况，我会尽力帮你分析。');
+        // 智能开场白 — 根据设置状态和模式产生不同的开场
+        const hasPersona = userSettings.zodiac && userSettings.mbti;
+        let msg = '';
+        
+        if (mode === 'companion') {
+            if (hasPersona) {
+                const zd = PERSONALITY.zodiac[userSettings.zodiac];
+                const md = PERSONALITY.mbti[userSettings.mbti];
+                const companionOpener = [
+                    `你来了呀~ 我用${zd?.name || 'TA'}的风格陪你聊天，有什么想说的都可以告诉我哦`,
+                    `嗨~ 知道你想找人聊聊，我一直在等你呢（${zd?.name || 'TA'}风格）`,
+                    `今天怎么样？我刚好在想你会不会来找我说话~`,
+                    `你来啦~ 今天有什么想和我分享的吗？`
+                ];
+                msg = companionOpener[Math.floor(Math.random() * companionOpener.length)];
+            } else {
+                const noPersonaOpener = [
+                    '你好呀~ 我在这儿陪着你呢，想说什么都可以',
+                    '嗨~ 今天感觉怎么样？想聊聊吗？',
+                    '欢迎来到数星~ 我是你的陪伴小助手，有什么话都可以和我说'
+                ];
+                msg = noPersonaOpener[Math.floor(Math.random() * noPersonaOpener.length)];
+            }
+        } else {
+            if (hasPersona) {
+                const zd = PERSONALITY.zodiac[userSettings.zodiac];
+                const md = PERSONALITY.mbti[userSettings.mbti];
+                const counselingOpener = [
+                    `欢迎来到情感咨询。结合TA的${zd?.name||'星座'}和${md?.name||'MBTI'}特质，我们可以一起分析和梳理你的情况。愿意和我说说吗？`,
+                    `我准备好了。人格模型显示的一些沟通特征可以帮助我们更针对性地分析问题。发生了什么，你可以告诉我。`,
+                    `情感咨询模式已开启。在这里你可以放心地说出你的困扰，我会基于人格特征给你温暖的分析和建议。`
+                ];
+                msg = counselingOpener[Math.floor(Math.random() * counselingOpener.length)];
+            } else {
+                const noPersonaOpener = [
+                    '欢迎来到情感咨询。我准备好听你说话了，你可以告诉我最近发生了什么',
+                    '情感咨询模式已开启。如果你想分析一段关系或者整理自己的感受，随时可以开始',
+                    '我在这里，你的每一个感受都值得被倾听。告诉我你的情况，我们一起看看'
+                ];
+                msg = noPersonaOpener[Math.floor(Math.random() * noPersonaOpener.length)];
+            }
+        }
         
         addBotMessage(msg);
     }
@@ -395,12 +440,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (personaInfo && userSettings.zodiac && userSettings.mbti) {
             personaInfo.textContent = `基于 ${PERSONALITY.zodiac[userSettings.zodiac]?.name || userSettings.zodiac} · ${userSettings.mbti}`;
         }
+        updatePlaceholder();
+    }
+    
+    function updatePlaceholder() {
+        if (!inputEl) return;
+        const placeholders = {
+            'companion': ['和我说说吧...', '今天想聊什么？', '我在听呢...', '想说什么都可以哦'],
+            'counseling': ['说说你的情况吧', '发生了什么？可以告诉我', '我在认真听你说']
+        };
+        const options = placeholders[currentMode] || placeholders.companion;
+        inputEl.placeholder = options[Math.floor(Math.random() * options.length)];
     }
     
     function toggleMode() {
         currentMode = currentMode === 'companion' ? 'counseling' : 'companion';
         updateModeDisplay();
-        
         addSystemMessage(`已切换到${currentMode === 'companion' ? '陪伴对话' : '情感咨询'}模式 💫`);
     }
     
@@ -637,4 +692,5 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.style.transform = 'translateX(-50%) translateY(100px)';
         }, 2500);
     }
+    
 }
