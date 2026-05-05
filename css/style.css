@@ -1134,3 +1134,78 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary);
 }
+
+/* ===== 暗色模式 ===== */
+[data-theme="dark"] {
+    --primary: #8b9aff;
+    --primary-light: #7c8aff;
+    --primary-dark: #6a7cf0;
+    --secondary: #5a8fc0;
+    --bg: #151725;
+    --bg-gradient: linear-gradient(135deg, #121422 0%, #1a1c32 50%, #181b30 100%);
+    --card: #252842;
+    --card-hover: #2d3050;
+    --text: #e2e4f0;
+    --text-secondary: #a0a3bf;
+    --text-muted: #70738f;
+    --border: rgba(255,255,255,0.08);
+    --shadow: rgba(0,0,0,0.2);
+    --shadow-hover: rgba(0,0,0,0.35);
+}
+
+[data-theme="dark"] body {
+    background: var(--bg-gradient);
+}
+
+[data-theme="dark"] .back-btn {
+    background: #252842;
+    border-color: rgba(255,255,255,0.08);
+    color: #c0c3d8;
+}
+
+[data-theme="dark"] .back-btn:hover {
+    background: #2d3050;
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] .mode-card {
+    background: #252842;
+    border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .mode-card:hover {
+    background: #2d3050;
+    border-color: var(--primary-light);
+}
+
+[data-theme="dark"] .mode-card p {
+    color: #a0a3bf;
+}
+
+[data-theme="dark"] .mode-card-badge {
+    background: rgba(255,255,255,0.05);
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] .help-modal-content {
+    background: #252842;
+}
+
+[data-theme="dark"] .help-modal-content h3,
+[data-theme="dark"] .help-section h4 {
+    color: #e2e4f0;
+}
+
+[data-theme="dark"] .help-modal-close {
+    background: #2d3050;
+    border-color: rgba(255,255,255,0.1);
+    color: #c0c3d8;
+}
+
+[data-theme="dark"] .help-modal-close:hover {
+    background: #353858;
+}
+
+[data-theme="dark"] .help-modal {
+    background: rgba(0,0,0,0.6);
+}

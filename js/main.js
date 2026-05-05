@@ -120,6 +120,8 @@ function checkSetupStatus() {
                 if (personaEl) personaEl.textContent = `${zName} · ${data.mbti || ''}`;
                 if (setupBtn) setupBtn.textContent = '重新设置';
                 if (chatBtn) chatBtn.style.display = 'inline-flex';
+                const analysisBtn = document.getElementById('analysis-btn');
+                if (analysisBtn) analysisBtn.style.display = 'inline-flex';
                 
                 return;
             }

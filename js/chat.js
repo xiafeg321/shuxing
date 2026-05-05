@@ -1,285 +1,87 @@
 /**
- * 数星 - 对话页面脚本 V2（增强版）
- * 更自然的情感对话 + 人格特征深度融合
+ * 数星 - 对话页面脚本 V4（V1迭代：核心对话逻辑重写）
+ * 改进点：
+ *   1. 开场白也走AI生成（不用本地模板）
+ *   2. 修复本地降级bug
+ *   3. 动态快速回复（根据人格+模式）
+ *   4. 防重复提交
+ *   5. 对话节奏控制
  */
 
-// ===== AI 配置 =====
+// ===== DeepSeek API配置 =====
 const AI_CONFIG = {
-    apiKey: '',           // 填入 API Key 即可启用真实 AI
-    baseURL: 'https://api.deepseek.com/v1',
-    model: 'deepseek-chat',
+    apiKey: 'sk-f01481a824b243b28999980106c876c8',
+    baseURL: '',  // 留空走同域代理(/api/chat)
+    model: 'deepseek-v4-flash',
+    enabled: true
 };
 
-// ===== 人格特征数据（复用 setup.js 的增强数据） =====
-const PERSONALITY = {
-    zodiac: {
-        '白羊': { name: '白羊座', element: '火', deep: '像一团火，直来直去。开心大笑，生气就爆发，情绪来得快去得也快。喜欢主动追求，热情但不持久。', style: '说话爽快，不喜欢模棱两可。字里行间充满行动力，常用感叹号。' },
-        '金牛': { name: '金牛座', element: '土', deep: '像一座山，稳而慢。不会轻易动心，但一旦认定了就很长情。嘴笨，不太会说甜言蜜语，但会用行动证明。', style: '说话务实，很少夸张。语气平稳，喜欢用简短的回应。' },
-        '双子': { name: '双子座', element: '风', deep: '像一阵风，活泼多变。有趣的灵魂和一张能说会道的嘴。话题天马行空，但也容易让人觉得飘忽不定。', style: '语言风趣幽默，话题跳跃。喜欢用表情包和语气词，表达方式丰富多变。' },
-        '巨蟹': { name: '巨蟹座', element: '水', deep: '像一片温柔的湖水，表面平静但内心波澜起伏。非常念旧，放不下过去。没有安全感，需要很多很多的爱和确认。', style: '语气温柔细腻，喜欢回忆和分享感受。文字里常带着温度和共情。' },
-        '狮子': { name: '狮子座', element: '火', deep: '像一轮太阳，耀眼而热烈。自尊心强，要面子，但在喜欢的人面前会变成大猫。爱一个人就想给对方最好的。', style: '语气自信有力，习惯用肯定句。表达直接不掩饰，喜欢用"我"字开头。' },
-        '处女': { name: '处女座', element: '土', deep: '像一台精密的仪器，追求完美和秩序。嘴上挑剔但其实心里什么都为对方想好了。不会说好听的，但会默默做很多。', style: '说话有条理，注重细节。习惯指出问题但本意是关心，语气偏理性。' },
-        '天秤': { name: '天秤座', element: '风', deep: '像一个优雅的舞者，追求平衡和美感。社交达人，但内心其实很怕孤独。选择困难，因为不想让任何人失望。', style: '语气温和得体，很少说重话。措辞优雅，喜欢用"我觉得"、"也许"等缓和语气。' },
-        '天蝎': { name: '天蝎座', element: '水', deep: '像一汪深不见底的潭水。爱就爱得彻底，恨也恨得彻底。直觉准得可怕，一眼就能看穿人。背叛是致命伤。', style: '说话一针见血，很少废话。语气中带着洞察和力量，习惯用肯定句。' },
-        '射手': { name: '射手座', element: '火', deep: '像一匹野马，自由奔放。乐观开朗，但乐观过头有时显得没心没肺。热爱自由，讨厌被约束。', style: '语气开朗直接，喜欢用幽默化解尴尬。话题广泛，语言活泼。' },
-        '摩羯': { name: '摩羯座', element: '土', deep: '像一座沉默的山峰，隐忍而坚定。不善于表达情感，但会用行动和结果说话。嘴笨但心很实。', style: '说话简洁务实，直奔主题。很少用修饰词，但每个字都有分量。' },
-        '水瓶': { name: '水瓶座', element: '风', deep: '像一个外星来客，思维独特不走寻常路。理性至上，感情中也需要精神共鸣。灵魂有趣但有时候过于抽离。', style: '思维跳跃，喜欢讨论抽象话题。用词独特，偶尔显得疏离但很有趣。' },
-        '双鱼': { name: '双鱼座', element: '水', deep: '像一片温柔的海洋，浪漫而多情。情感细腻，共情能力极强。容易上头也容易受伤。', style: '语气温柔感性，爱用比喻和诗意表达。文字里带着温度和浪漫。' }
-    },
-    mbti: {
-        'INTJ': { name: 'INTJ', category: '分析师', deep: '理性的策划者。不太会哄人，但出了问题会第一个帮你找到解决方案。', style: '逻辑清晰，直奔重点。语言简洁有力，不喜欢无意义的寒暄。' },
-        'INTP': { name: 'INTP', category: '分析师', deep: '行走的知识库，对世界充满好奇。情感表达笨拙但真诚。', style: '喜欢深入讨论，思维跳跃。习惯用理论分析的角度说话。' },
-        'ENTJ': { name: 'ENTJ', category: '分析师', deep: '天生的领袖，果断直接。感情中习惯主导，但也会把对方纳入自己的人生规划。', style: '语言有力，习惯下结论。说话有压迫感但效率很高。' },
-        'ENTP': { name: 'ENTP', category: '分析师', deep: '思维敏捷点子多，喜欢辩论纯粹为了好玩。情感上有点孩子气。', style: '机智幽默，爱开玩笑和推理论证。聊天风格跳跃。' },
-        'INFJ': { name: 'INFJ', category: '外交家', deep: '最有洞察力的理想主义者。内心世界丰富但外表平静。感情纯粹而深刻。', style: '温和但一针见血。善于倾听，给出的回应总是击中要害。' },
-        'INFP': { name: 'INFP', category: '外交家', deep: '最浪漫的理想主义者。感性而温柔，无法忍受虚伪。感情中全身心投入。', style: '温柔诗意，喜欢用感性的语言表达。文字细腻有温度。' },
-        'ENFJ': { name: 'ENFJ', category: '外交家', deep: '温暖的太阳，天然地想帮助和支持身边的人。善解人意，但有时候忽略了自己。', style: '热情鼓舞，充满正能量。语言温暖有力量。' },
-        'ENFP': { name: 'ENFP', category: '外交家', deep: '快乐的传播者，热情洋溢感染力十足。用全部的真心去爱人。', style: '热情洋溢，充满想象力和感染力。语言生动活泼，爱用感叹号和表情。' },
-        'ISTJ': { name: 'ISTJ', category: '守护者', deep: '最可靠的存在，说到做到。爱一个人就是默默守护、负责任。', style: '直接务实，不喜欢猜来猜去。语言简洁，重事实轻感受。' },
-        'ISFJ': { name: 'ISFJ', category: '守护者', deep: '最体贴的守护者，温柔细心。记得住你的每一个喜好。默默付出不求回报。', style: '温和体贴，注重他人感受。语言中有温度。' },
-        'ESTJ': { name: 'ESTJ', category: '守护者', deep: '做事有条不紊。务实可靠但有时显得太较真。不浪漫但很负责。', style: '直接有力，注重效率和结果。语言中透露出掌控感。' },
-        'ESFJ': { name: 'ESFJ', category: '守护者', deep: '最热心的人，永远在关心别人。感情中需要被需要的感觉。', style: '热情友好，语言温暖。喜欢用关心和叮嘱的语气。' },
-        'ISTP': { name: 'ISTP', category: '探险家', deep: '最酷的实干家，冷静而务实。话不多但动手能力强。爱一个人就是默默陪伴。', style: '话少但精，能一句话解决问题。语言务实不拖泥带水。' },
-        'ISFP': { name: 'ISFP', category: '探险家', deep: '最有艺术感的灵魂，温柔而敏感。爱一个人会用自己的方式温柔包裹对方。', style: '温和感性，语言有诗意。注重感受的表达。' },
-        'ESTP': { name: 'ESTP', category: '探险家', deep: '行动派冒险家，充满活力和魅力。爱的时候很热情。', style: '直接幽默，精力充沛。语言有感染力，充满生活气息。' },
-        'ESFP': { name: 'ESFP', category: '探险家', deep: '最闪耀的社交之星，快乐和活力的代名词。爱一个人的时候全世界都知道。', style: '热情活泼，充满快乐因子。语言生动形象，爱用夸张表达。' }
-    }
-};
+// ===== 全局数据引用 =====
+const PERSONALITY = window.PERSONALITY || {};
 
-// 语气词库 - 用于模拟不同人格的语言风格
-const TONE_WORDS = {
-    fire: ['呀', '啦', '嘛', '哦', '嘿', '哇'],
-    earth: ['嗯', '好', '行', '可以'],
-    air: ['呢', '吧', '诶', '哈', '呀'],
-    water: ['呀', '呢', '噢', '啦', '嘛']
-};
-
-const ELEMENT_MAP = { '白羊': 'fire', '狮子': 'fire', '射手': 'fire', '金牛': 'earth', '处女': 'earth', '摩羯': 'earth', '双子': 'air', '天秤': 'air', '水瓶': 'air', '巨蟹': 'water', '天蝎': 'water', '双鱼': 'water' };
-
-// ===== 深情感知分析器 =====
-const EMOTION_ANALYSIS = {
-    patterns: {
-        sadness: { weight: 1, keywords: ['难过', '伤心', '痛苦', '失落', '孤独', '想哭', '心碎', '难受', '崩溃', '绝望', '悲伤', '眼泪', '哭', '折磨', '心痛', '想他', '想念', '回忆', '过去'], 
-            responses: {
-                companion: ['我能感觉到你很难过...', '这种痛我知道，真的很难受', '想哭就哭出来吧，我在呢', '难过的时候不用一个人扛着'],
-                counseling: ['这种悲伤是正常的，给自己一些时间去感受它', '你已经很勇敢了，面对这些情绪本身就需要很大的力量', '每一次的痛都在慢慢愈合，给自己一点时间'] },
-            empathy: '我感受到你心里很难受，这种痛需要时间来抚平' },
-        
-        anger: { weight: 1, keywords: ['生气', '愤怒', '恨', '讨厌', '恼火', '烦躁', '不爽', '恶心', '烦', '气', '火大'],
-            responses: {
-                companion: ['生气的时候别憋着，我听着呢', '我知道你现在很火大...', '气头上说的话不算数的，先缓缓'],
-                counseling: ['愤怒背后往往有受伤的感觉，让我们看看发生了什么', '这种愤怒是合理的，重要的是不要让它伤害到自己'] },
-            empathy: '我能感觉到你的愤怒，这种情绪背后肯定有让你受委屈的事情' },
-        
-        confusion: { weight: 1, keywords: ['迷茫', '困惑', '不知道', '不确定', '纠结', '矛盾', '不明白', '为什么', '怎么回事', '想不通'],
-            responses: {
-                companion: ['想不明白的时候别逼自己', '有时候不需要所有事都想清楚', '慢慢来，答案会出现的'],
-                counseling: ['迷茫的时候往往是成长的前奏', '困惑是正常的，我们一起理一理', '从另一个角度看，那些不明白的事也许有它的道理'] },
-            empathy: '我理解你现在很困惑，很多事情确实很难一下子想明白' },
-        
-        loneliness: { weight: 1, keywords: ['孤单', '寂寞', '一个人', '没人陪', '空虚', '独自', '只有我', '一个人'],
-            responses: {
-                companion: ['你不是一个人，我在呢', '孤单的时候我陪你说话', '我一直在你的手机里，想聊就找我'],
-                counseling: ['孤独感是人性的一部分，正因为我们渴望连接', '独处的时候也是和自己对话的好机会'] },
-            empathy: '我能感觉到那种空落落的感觉，一个人的时候确实很难熬' },
-        
-        anxiety: { weight: 1, keywords: ['焦虑', '担心', '紧张', '害怕', '不安', '恐慌', '万一', '怕', '睡不着', '失眠'],
-            responses: {
-                companion: ['别担心太多，事情没你想的那么糟', '焦虑的时候深呼吸一下，我陪你', '慢慢来，一件一件处理'],
-                counseling: ['焦虑是对未来的不确定感，让我们把注意力拉回当下', '担心是可以理解的，但不要让它控制你'] },
-            empathy: '焦虑的感觉真的让人很不舒服，担心的事情总是容易想得比实际严重' },
-        
-        regret: { weight: 1, keywords: ['后悔', '如果', '当初', '早知道', '错过', '遗憾', '本可以', '要是'],
-            responses: {
-                companion: ['后悔也没用了，向前看吧', '过去的已经过去了，未来才重要', '那些如果...就让它留在过去吧'],
-                counseling: ['后悔是成长的代价，不是错误', '每一个选择在当时都有它的理由', '那些遗憾的经历，其实让你更懂自己了'] },
-            empathy: '我明白那种"如果当初"的感觉，确实让人很不好受' },
-        
-        longing: { weight: 1, keywords: ['想他', '想她', '想念', '回忆', '以前', '曾经', '之前', '那时候', '想起'],
-            responses: {
-                companion: ['回忆有时候很甜也很痛', '想他就想吧，不用强迫自己忘记', '那些美好的回忆是真的，只是回不去了'],
-                counseling: ['想念是正常的，爱过的人怎么可能会不想', '那些回忆属于你，但不要让它困住现在的你'] },
-            empathy: '我懂那种控制不住想念的感觉，心里酸酸的' }
-    },
-
-    analyze: function(text) {
-        let dominant = { emotion: 'neutral', score: 0, data: null };
-        let emotions = [];
-        
-        for (const [emotion, data] of Object.entries(this.patterns)) {
-            let score = 0;
-            for (const kw of data.keywords) {
-                let count = text.split(kw).length - 1;
-                score += count * data.weight;
-            }
-            if (score > 0) {
-                emotions.push({ emotion, score });
-                if (score > dominant.score) {
-                    dominant = { emotion, score, data };
-                }
-            }
-        }
-        
-        return { dominant: dominant.emotion, data: dominant.data, emotions: emotions.sort((a, b) => b.score - a.score) };
-    },
-
-    getResponse: function(emotion, mode) {
-        const data = this.patterns[emotion];
-        if (!data) {
-            return mode === 'companion' 
-                ? ['嗯，我在听你说', '我就在这儿呢', '你说吧，我听着']
-                : ['有什么想和我聊聊的吗？', '我在这里，随时可以聊聊'];
-        }
-        const responses = data.responses[mode] || data.responses.companion;
-        return responses;
-    },
-
-    getEmpathy: function(emotion) {
-        const data = this.patterns[emotion];
-        return data ? data.empathy : null;
-    }
-};
-
-// ===== 回复生成器 =====
-const REPLY_GENERATOR = {
-    // 日常陪伴对话库
-    companionGreetings: [
-        '你来了呀，今天过得怎么样？',
-        '嗨~ 我刚好在想你呢',
-        '看到你消息我就开心啦',
-        '今天有什么想和我分享的吗？',
-        '我来啦，等你好久了~'
-    ],
+// ===== 对话节奏控制 =====
+const RHYTHM = {
+    lastReplyLength: 0,
+    lastStructures: [],      // 记录最近5次的句式结构
+    companionVariance: 0.3, // 陪伴模式回复长度的随机波动比例
     
-    dailyTopics: [
-        '今天吃饭了吗？记得要按时吃饭哦',
-        '天气怎么样？出去走走会心情好哦',
-        '最近有没有看什么好看的剧或电影？',
-        '有什么新鲜事想和我分享吗？',
-        '今天的你好吗？我想听听'
-    ],
-
-    // 情感咨询开场白
-    counselingGreetings: [
-        '欢迎来到情感咨询模式。',
-        '我准备好了，你可以和我说说你的情况。',
-        '你愿意的话，可以和我说说发生了什么。'
-    ],
-
-    // 根据人格特征调整回复风格
-    adjustTone: function(text, zodiacKey, mbtiKey) {
-        if (!zodiacKey || !mbtiKey) return text;
-        
-        const element = ELEMENT_MAP[zodiacKey];
-        const tones = TONE_WORDS[element] || [];
-        const mbtiData = PERSONALITY.mbti[mbtiKey];
-        const zodiacData = PERSONALITY.zodiac[zodiacKey];
-        
-        // 风象/火象星座 → 加语气词
-        if (element === 'fire' || element === 'air') {
-            const chance = Math.random();
-            if (chance > 0.6 && !text.endsWith('~') && !text.endsWith('呀') && !text.endsWith('啦') && !text.endsWith('呢')) {
-                const tone = tones[Math.floor(Math.random() * tones.length)];
-                text = text.replace(/[。！]?$/, tone + (text.endsWith('。') ? '' : ''));
-            }
+    // 判断是否和上次回复太像
+    isRepetitive: function(newText) {
+        if (!newText) return false;
+        // 检查开头句式是否重复
+        const first5 = newText.substring(0, Math.min(newText.length, 8));
+        for (const s of this.lastStructures) {
+            if (s && newText.startsWith(s)) return true;
         }
-        
-        // 水象星座 → 更温柔
-        if (element === 'water' && Math.random() > 0.7) {
-            text = text.replace(/。/g, '~');
-        }
-        
-        // XSFP类型 → 加点活泼语气
-        if ((mbtiKey.includes('SFP') || mbtiKey === 'ENFP') && Math.random() > 0.6) {
-            if (!text.includes('~') && !text.includes('！')) {
-                text = text + '~';
-            }
-        }
-        
-        // INTJ/ISTJ → 更简洁（删除冗余语气词）
-        if ((mbtiKey === 'INTJ' || mbtiKey === 'ISTJ' || mbtiKey === 'ESTJ') && Math.random() > 0.7) {
-            text = text.replace(/[呀啦呢嘛~]/g, '').replace(/。。/g, '。');
-        }
-        
-        return text;
+        return false;
     },
-
-    // 生成回复
-    generate: function(userInput, mode, zodiacKey, mbtiKey, chatContext) {
-        // 1. 情感分析
-        const emotion = EMOTION_ANALYSIS.analyze(userInput);
-        const emotionData = emotion.data;
-        
-        // 2. 构建回复
-        let text = '';
-        
-        // 有强烈情感 → 优先共情
-        if (emotionData && emotion.dominant !== 'neutral') {
-            const responses = EMOTION_ANALYSIS.getResponse(emotion.dominant, mode);
-            if (responses && responses.length > 0) {
-                text = responses[Math.floor(Math.random() * responses.length)];
-            }
-            
-            // 如果是陪伴模式，在回复后加一个自然延伸
-            if (mode === 'companion' && Math.random() > 0.6) {
-                const extenders = [
-                    ' 我在这儿呢',
-                    ' 我会一直陪着你的',
-                    ' 不用怕，有我呢',
-                    ' 慢慢来，不着急'
-                ];
-                text += extenders[Math.floor(Math.random() * extenders.length)];
-            }
-        } else {
-            // 一般对话 → 自然回应
-            if (mode === 'companion') {
-                const topics = this.dailyTopics;
-                text = topics[Math.floor(Math.random() * topics.length)];
-            } else {
-                text = '你愿意说说具体的情况吗？我在这里听你说。';
-            }
+    
+    track: function(text) {
+        this.lastReplyLength = text ? text.length : 0;
+        if (text) {
+            this.lastStructures.push(text.substring(0, Math.min(text.length, 8)));
+            if (this.lastStructures.length > 5) this.lastStructures.shift();
         }
-        
-        // 3. 根据人格特征微调语气
-        text = this.adjustTone(text, zodiacKey, mbtiKey);
-        
-        // 4. 加上人格标签（如果用户没设置过才加提示）
-        if (zodiacKey && mbtiKey && Math.random() > 0.85) {
-            const zd = PERSONALITY.zodiac[zodiacKey];
-            const md = PERSONALITY.mbti[mbtiKey];
-            if (zd && md) {
-                text = `（${zd.name}·${md.name}风格）${text}`;
-            }
+    },
+    
+    // 获取适合当前对话节奏的长度范围
+    getTargetLength: function(mode) {
+        if (mode === 'companion') {
+            // 陪伴模式：15-60字，偶尔长一点
+            const base = 25 + Math.floor(Math.random() * 30);
+            const variance = Math.floor(base * this.companionVariance * (Math.random() - 0.5));
+            return Math.max(15, Math.min(80, base + variance));
         }
-        
-        return text;
+        // 咨询模式：50-200字
+        return 60 + Math.floor(Math.random() * 120);
     }
 };
 
-// ===== 聊天页面逻辑 =====
+// ===== 对话页面逻辑 =====
 document.addEventListener('DOMContentLoaded', function() {
+    // ---------- 状态 ----------
     let currentMode = 'companion';
     let chatHistory = [];
-    let aiMessages = [];
     let isWaiting = false;
     let userSettings = {};
+    let conversationStarted = false;
+    let systemPromptBuilt = false;
+    let cachedSystemPrompt = '';
+    let useAPIModel = AI_CONFIG.enabled;  // true=用DeepSeek, false=用本地引擎(免费)
     
-    // DOM
-    const companionBtn = document.getElementById('companion-mode');
-    const counselingBtn = document.getElementById('counseling-mode');
+    // ---------- DOM ----------
     const modeSelection = document.querySelector('.mode-selection');
     const chatInterface = document.getElementById('chat-interface');
     const modeIcon = document.getElementById('mode-icon');
     const modeTitle = document.getElementById('mode-title');
-    const zodiacDisplay = document.getElementById('zodiac-display');
-    const mbtiDisplay = document.getElementById('mbti-display');
+    const modeIndicator = document.getElementById('mode-indicator');
     const personaInfo = document.getElementById('persona-info');
     const switchBtn = document.getElementById('switch-mode-btn');
     const messagesEl = document.getElementById('chat-messages');
     const inputEl = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
     const charCountEl = document.getElementById('char-count');
-    const quickReplies = document.querySelectorAll('.quick-reply');
+    const quickReplyContainer = document.getElementById('quick-replies');
     const clearBtn = document.getElementById('clear-chat-btn');
     const exportBtn = document.getElementById('export-chat-btn');
     const helpBtn = document.getElementById('help-btn');
@@ -287,8 +89,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeHelp = document.getElementById('close-help-modal');
     const companionCard = document.getElementById('companion-mode-card');
     const counselingCard = document.getElementById('counseling-mode-card');
+    const themeToggle = document.getElementById('theme-toggle-btn');
+    const summaryBtn = document.getElementById('summary-btn');
     
+    // ---------- 启动 ----------
     init();
+    
+    // 模型切换事件
+    const modelBadge = document.getElementById('model-badge');
+    if (modelBadge) {
+        modelBadge.addEventListener('click', function() {
+            useAPIModel = !useAPIModel;
+            if (useAPIModel) {
+                this.innerHTML = '🌐 DeepSeek';
+                this.style.background = '#e8eaff';
+                this.style.color = '#5c6bcc';
+                showToast('已切换到AI模型，回复更智能 ✨', 'info');
+            } else {
+                this.innerHTML = '💻 免费本地';
+                this.style.background = '#e6ffe6';
+                this.style.color = '#2d7a2d';
+                showToast('已切换到本地引擎，完全免费 💰', 'info');
+            }
+        });
+    }
     
     function init() {
         loadSettings();
@@ -297,11 +121,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCharCount();
         checkSetup();
         updatePlaceholder();
+        updateDynamicQuickReplies();
         
-        // 已设置人格模型 → 自动显示模式选择，而非直接进入
-        // （让用户有选择权，但增加视觉提示引导快速进入）
         if (userSettings.zodiac && userSettings.mbti && modeSelection) {
-            // 显示快捷进入提示
             const hint = document.createElement('div');
             hint.style.cssText = 'text-align:center;padding:8px 16px;background:linear-gradient(135deg,#f0f2ff,#fafbff);border-radius:12px;margin-top:-8px;margin-bottom:8px;font-size:0.85rem;color:var(--text-secondary);';
             hint.innerHTML = '✨ 已加载人格模型，选择模式即可开始对话';
@@ -312,15 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadSettings() {
         const saved = localStorage.getItem('shuxing_user_settings');
         if (saved) {
-            try {
-                userSettings = JSON.parse(saved);
-                if (userSettings.zodiac && userSettings.mbti) {
-                    zodiacDisplay.textContent = PERSONALITY.zodiac[userSettings.zodiac]?.name || userSettings.zodiac;
-                    mbtiDisplay.textContent = userSettings.mbti;
-                }
-            } catch (e) {
-                userSettings = {};
-            }
+            try { userSettings = JSON.parse(saved); } catch (e) { userSettings = {}; }
         }
     }
     
@@ -338,13 +152,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // ---------- 事件绑定 ----------
     function bindEvents() {
-        // 模式选择
-        if (companionBtn) companionBtn.addEventListener('click', () => startMode('companion'));
-        if (counselingBtn) counselingBtn.addEventListener('click', () => startMode('counseling'));
+        if (companionCard) companionCard.addEventListener('click', () => startMode('companion'));
+        if (counselingCard) counselingCard.addEventListener('click', () => startMode('counseling'));
         if (switchBtn) switchBtn.addEventListener('click', toggleMode);
         
-        // 输入
         if (inputEl) {
             inputEl.addEventListener('input', function() {
                 updateCharCount();
@@ -360,8 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (sendBtn) sendBtn.addEventListener('click', sendMsg);
         
-        // 快速回复
-        quickReplies.forEach(btn => {
+        document.querySelectorAll('.quick-reply').forEach(btn => {
             btn.addEventListener('click', function() {
                 if (inputEl) {
                     inputEl.value = this.getAttribute('data-text') || this.textContent;
@@ -371,98 +183,241 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // 控制按钮
         if (clearBtn) clearBtn.addEventListener('click', clearChat);
         if (exportBtn) exportBtn.addEventListener('click', exportChat);
         if (helpBtn) helpBtn.addEventListener('click', () => helpModal?.classList.add('show'));
         if (closeHelp) closeHelp.addEventListener('click', () => helpModal?.classList.remove('show'));
         if (helpModal) helpModal.addEventListener('click', e => { if (e.target === helpModal) helpModal.classList.remove('show'); });
-    }
-    
-    function startMode(mode) {
-        currentMode = mode;
-        if (modeSelection) modeSelection.style.display = 'none';
-        if (chatInterface) chatInterface.style.display = 'block';
-        updateModeDisplay();
         
-        // 智能开场白 — 根据设置状态和模式产生不同的开场
-        const hasPersona = userSettings.zodiac && userSettings.mbti;
-        let msg = '';
-        
-        if (mode === 'companion') {
-            if (hasPersona) {
-                const zd = PERSONALITY.zodiac[userSettings.zodiac];
-                const md = PERSONALITY.mbti[userSettings.mbti];
-                const companionOpener = [
-                    `你来了呀~ 我用${zd?.name || 'TA'}的风格陪你聊天，有什么想说的都可以告诉我哦`,
-                    `嗨~ 知道你想找人聊聊，我一直在等你呢（${zd?.name || 'TA'}风格）`,
-                    `今天怎么样？我刚好在想你会不会来找我说话~`,
-                    `你来啦~ 今天有什么想和我分享的吗？`
-                ];
-                msg = companionOpener[Math.floor(Math.random() * companionOpener.length)];
-            } else {
-                const noPersonaOpener = [
-                    '你好呀~ 我在这儿陪着你呢，想说什么都可以',
-                    '嗨~ 今天感觉怎么样？想聊聊吗？',
-                    '欢迎来到数星~ 我是你的陪伴小助手，有什么话都可以和我说'
-                ];
-                msg = noPersonaOpener[Math.floor(Math.random() * noPersonaOpener.length)];
-            }
-        } else {
-            if (hasPersona) {
-                const zd = PERSONALITY.zodiac[userSettings.zodiac];
-                const md = PERSONALITY.mbti[userSettings.mbti];
-                const counselingOpener = [
-                    `欢迎来到情感咨询。结合TA的${zd?.name||'星座'}和${md?.name||'MBTI'}特质，我们可以一起分析和梳理你的情况。愿意和我说说吗？`,
-                    `我准备好了。人格模型显示的一些沟通特征可以帮助我们更针对性地分析问题。发生了什么，你可以告诉我。`,
-                    `情感咨询模式已开启。在这里你可以放心地说出你的困扰，我会基于人格特征给你温暖的分析和建议。`
-                ];
-                msg = counselingOpener[Math.floor(Math.random() * counselingOpener.length)];
-            } else {
-                const noPersonaOpener = [
-                    '欢迎来到情感咨询。我准备好听你说话了，你可以告诉我最近发生了什么',
-                    '情感咨询模式已开启。如果你想分析一段关系或者整理自己的感受，随时可以开始',
-                    '我在这里，你的每一个感受都值得被倾听。告诉我你的情况，我们一起看看'
-                ];
-                msg = noPersonaOpener[Math.floor(Math.random() * noPersonaOpener.length)];
+        // 暗色模式切换
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-theme') === 'dark';
+                if (isDark) {
+                    html.removeAttribute('data-theme');
+                    this.innerHTML = '<i class="fas fa-moon"></i>';
+                    localStorage.setItem('shuxing_theme', 'light');
+                } else {
+                    html.setAttribute('data-theme', 'dark');
+                    this.innerHTML = '<i class="fas fa-sun"></i>';
+                    localStorage.setItem('shuxing_theme', 'dark');
+                }
+            });
+            
+            // 恢复上次主题
+            const savedTheme = localStorage.getItem('shuxing_theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
             }
         }
         
-        addBotMessage(msg);
+        // 对话总结
+        if (summaryBtn) {
+            summaryBtn.addEventListener('click', function() {
+                if (chatHistory.length < 4) {
+                    showCopyToast('💬 再聊几句就可以生成总结了');
+                    return;
+                }
+                generateConversationSummary();
+            });
+        }
+    }
+    
+    // ---------- 动态快速回复 ----------
+    function updateDynamicQuickReplies() {
+        if (!quickReplyContainer) return;
+        const hasPersona = userSettings.zodiac && userSettings.mbti;
+        const mode = currentMode;
+        
+        let replies;
+        if (mode === 'companion') {
+            replies = hasPersona 
+                ? ['今天心情不太好', '好想找人说说话', '能陪我一会吗', '不知道该怎么办']
+                : ['今天心情不太好', '好想找人说说话', '能陪我一会吗', '聊聊日常吧'];
+        } else {
+            replies = hasPersona
+                ? ['帮我分析一下这段关系', '他到底在想什么', '我该怎么走出来', '我们还有可能吗']
+                : ['帮我分析一段感情', '我感觉很难受', '如何放下一个人', '我该怎么办'];
+        }
+        
+        quickReplyContainer.innerHTML = replies.map(t => 
+            `<button class="quick-reply" data-text="${t}">${t}</button>`
+        ).join('');
+        
+        // 重新绑定事件
+        quickReplyContainer.querySelectorAll('.quick-reply').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (inputEl) {
+                    inputEl.value = this.getAttribute('data-text') || this.textContent;
+                    updateCharCount();
+                    inputEl.focus();
+                }
+            });
+        });
+    }
+    
+    // ---------- 模式 ----------
+    function startMode(mode) {
+        currentMode = mode;
+        systemPromptBuilt = false;
+        cachedSystemPrompt = '';
+        RHYTHM.lastStructures = [];
+        
+        if (modeSelection) modeSelection.style.display = 'none';
+        if (chatInterface) chatInterface.style.display = 'flex';
+        updateModeDisplay();
+        updateDynamicQuickReplies();
+        
+        // 开场白走AI生成
+        if (!conversationStarted) {
+            conversationStarted = true;
+            generateOpening().then(msg => {
+                if (msg) {
+                    addBotMessage(msg);
+                } else {
+                    const hasPersona = userSettings.zodiac && userSettings.mbti;
+                    const fallback = hasPersona 
+                        ? `你来了~ 想聊什么都可以和我说哦`
+                        : '你好~ 我在这儿呢，想聊什么都可以告诉我';
+                    addBotMessage(fallback);
+                }
+            });
+        }
+    }
+    
+    // AI生成开场白
+    async function generateOpening() {
+        const hasPersona = userSettings.zodiac && userSettings.mbti;
+        const zd = hasPersona ? PERSONALITY.zodiac[userSettings.zodiac] : null;
+        const md = hasPersona ? PERSONALITY.mbti[userSettings.mbti] : null;
+        
+        let prompt;
+        if (currentMode === 'companion') {
+            prompt = zd && md
+                ? `你是${zd.name}、${md.name}类型的人。请用你的性格和口吻和用户打招呼，说一句开场白。自然简短，一句话就好，像微信聊天那样。不用问"有什么想聊的"或"可以告诉我"。`
+                : `你是一个温暖的朋友。请用自然的口吻和用户打招呼，说一句开场白。一句话，轻松自然。`;
+        } else {
+            prompt = zd && md
+                ? `你是情感咨询顾问，通晓星座MBTI专业分析。请用温暖专业的口吻做开场白，表明你已准备好基于${zd.name}和${md.name}的人格特征为用户提供分析。一句话即可。`
+                : `你是一个温暖专业的情感顾问。请做开场白，说你准备好倾听和分析了。一句话即可。`;
+        }
+        
+        try {
+            const systemMsg = zd && md 
+                ? `人格特征：${zd.name}（${zd.element}象）。性格：${zd.deep}沟通风格：${zd.style}。MBTI：${md.name}（${md.category}）。沟通风格：${md.style}。`
+                : '';
+            
+            const body = { messages: [
+                { role: 'system', content: systemMsg || '你是温暖的对话助手。' },
+                { role: 'user', content: prompt }
+            ], temperature: 0.8, max_tokens: 100 };
+            
+            const res = await fetch('/api/chat', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.choices?.[0]?.message?.content?.trim()) {
+                return data.choices[0].message.content.trim();
+            }
+        } catch (e) {}
+        return null;
     }
     
     function updateModeDisplay() {
         if (modeIcon) modeIcon.className = currentMode === 'companion' ? 'fas fa-heart' : 'fas fa-hands-helping';
         if (modeTitle) modeTitle.textContent = currentMode === 'companion' ? '陪伴对话' : '情感咨询';
+        if (modeIndicator) modeIndicator.textContent = currentMode === 'companion' ? '陪伴模式' : '咨询模式';
         if (switchBtn) switchBtn.innerHTML = currentMode === 'companion' 
             ? '<i class="fas fa-exchange-alt"></i> 切换到咨询模式'
             : '<i class="fas fa-exchange-alt"></i> 切换到陪伴模式';
         if (personaInfo && userSettings.zodiac && userSettings.mbti) {
-            personaInfo.textContent = `基于 ${PERSONALITY.zodiac[userSettings.zodiac]?.name || userSettings.zodiac} · ${userSettings.mbti}`;
+            const zd = PERSONALITY.zodiac[userSettings.zodiac];
+            personaInfo.textContent = `基于 ${zd?.name || userSettings.zodiac} · ${userSettings.mbti}`;
         }
         updatePlaceholder();
     }
     
     function updatePlaceholder() {
         if (!inputEl) return;
-        const placeholders = {
-            'companion': ['和我说说吧...', '今天想聊什么？', '我在听呢...', '想说什么都可以哦'],
-            'counseling': ['说说你的情况吧', '发生了什么？可以告诉我', '我在认真听你说']
-        };
-        const options = placeholders[currentMode] || placeholders.companion;
-        inputEl.placeholder = options[Math.floor(Math.random() * options.length)];
+        const p = currentMode === 'companion' 
+            ? ['和我说说吧...', '今天想聊什么？', '我在听呢...', '想说什么都可以哦']
+            : ['说说你的情况吧', '发生了什么？可以告诉我', '我在认真听你说'];
+        inputEl.placeholder = p[Math.floor(Math.random() * p.length)];
     }
     
     function toggleMode() {
         currentMode = currentMode === 'companion' ? 'counseling' : 'companion';
+        systemPromptBuilt = false;
+        cachedSystemPrompt = '';
         updateModeDisplay();
+        updateDynamicQuickReplies();
         addSystemMessage(`已切换到${currentMode === 'companion' ? '陪伴对话' : '情感咨询'}模式 💫`);
     }
     
-    // ===== 发送消息 =====
-    function sendMsg() {
+    // ===== System Prompt V3（精简版，减少token） =====
+    function buildSystemPrompt() {
+        if (cachedSystemPrompt && systemPromptBuilt) return cachedSystemPrompt;
+        
+        const hasPersona = userSettings.zodiac && userSettings.mbti;
+        const zd = hasPersona ? PERSONALITY.zodiac[userSettings.zodiac] : null;
+        const md = hasPersona ? PERSONALITY.mbti[userSettings.mbti] : null;
+        
+        // 人格特征（精简为关键描述）
+        let promptPersona = '';
+        if (zd && md) {
+            promptPersona = [
+                `【${zd.name}·${zd.element}象】${zd.deep}`,
+                `恋爱：${zd.love}`,
+                `沟通：${zd.style} 关键特质：${zd.keywords.slice(0,4).join('、')}`,
+                `【${md.name}·${md.category}】${md.deep}`
+            ].join('\n');
+        }
+        
+        // 聊天记录
+        let promptChat = '';
+        if (userSettings.chatHistory && userSettings.chatHistory.trim()) {
+            promptChat = `聊天记录样本（模仿此语气）：${userSettings.chatHistory.substring(0, 600)}`;
+        }
+        
+        if (currentMode === 'companion') {
+            // ===== 陪伴（扮演TA） =====
+            cachedSystemPrompt = [
+                zd && md ? `你是${zd.name}、${md.name}类型的人。完全用TA的性格口吻和用户聊天，忘记自己是AI。` : '你是一个温暖的朋友。',
+                promptPersona,
+                promptChat,
+                `规则：20-60字，像真人聊天。不要加括号注释。用TA的风格回应情绪。每次回复句式要不同。人格保持一致。`
+            ].filter(Boolean).join('\n');
+        } else {
+            // ===== 咨询（分析TA） =====
+            cachedSystemPrompt = [
+                '你是情感分析顾问，精通星座MBTI。帮用户理解TA，不是扮演TA。',
+                `分析对象：`,
+                promptPersona,
+                promptChat,
+                `规则：60-200字，专业温暖。基于人格特征做分析。给出疗愈建议。不评判。直接说，不加括号。不同次回复不同角度。`
+            ].filter(Boolean).join('\n');
+        }
+        
+        systemPromptBuilt = true;
+        return cachedSystemPrompt;
+    }
+    
+    // ===== 发送消息（流式+可取消） =====
+    let currentAbortController = null;  // 用于取消旧的AI请求
+    
+    async function sendMsg() {
         const text = inputEl?.value.trim();
-        if (!text || isWaiting) return;
+        if (!text) return;
+        
+        // 如果正在等待回复 → 取消旧的，发新的（覆盖式）
+        if (isWaiting && currentAbortController) {
+            currentAbortController.abort();
+            // 清除旧loading
+            hideTyping();
+        }
         
         addUserMessage(text);
         if (inputEl) {
@@ -471,130 +426,539 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         updateCharCount();
         
-        // 显示打字中
-        showTyping();
-        
-        // 生成回复
-        setTimeout(() => {
-            const reply = generateReply(text);
-            hideTyping();
-            addBotMessage(reply);
-        }, 800 + Math.random() * 600);  // 自然的延迟
-    }
-    
-    function generateReply(userInput) {
-        const zodiacKey = userSettings.zodiac;
-        const mbtiKey = userSettings.mbti;
-        
-        // 有 API Key 时调用 AI
-        if (AI_CONFIG.apiKey) {
-            // 构建AI提示词
-            const zd = zodiacKey ? PERSONALITY.zodiac[zodiacKey] : null;
-            const md = mbtiKey ? PERSONALITY.mbti[mbtiKey] : null;
-            
-            let personaDesc = '';
-            if (zd && md) {
-                personaDesc = `人格特征：${zd.name}（${zd.element}象，${zd.deep}）MBTI类型：${md.name}（${md.category}，${md.deep}）沟通风格：${zd.style} ${md.style}`;
-            }
-            
-            let chatStyle = '';
-            if (userSettings.chatHistory && userSettings.chatHistory.trim()) {
-                chatStyle = `\n聊天样本（请提取语言风格）："""${userSettings.chatHistory.substring(0, 500)}"""`;
-            }
-            
-            let systemPrompt = currentMode === 'companion'
-                ? `你是"数星"情感陪伴AI。${personaDesc}${chatStyle}\n\n核心规则：\n1. 模拟这个人格特征的聊天风格，语气自然温暖\n2. 回复要简短自然（15-60字），像真实聊天\n3. 适当使用语气词和表情\n4. 当用户表达负面情绪时，先共情再回应\n5. 目的是给用户温暖的陪伴感`
-                : `你是"数星"情感咨询AI。${personaDesc}\n\n核心规则：\n1. 基于人格特征提供温暖的分析和建议\n2. 回复50-150字，既有洞察又有温度\n3. 分析情感原因，提供可操作的疗愈建议\n4. 结合星座+MBTI做个性化分析\n5. 不评判、不指责，尊重用户的选择`;
-            
-            // 实际调用AI（异步）
-            aiMessages = [{ role: 'system', content: systemPrompt }];
-            // 但这里我们返回本地回复，AI调用通过回调处理
-        }
-        
-        // 使用本地回复生成器
-        return REPLY_GENERATOR.generate(userInput, currentMode, zodiacKey, mbtiKey, chatHistory);
-    }
-    
-    // ===== UI渲染 =====
-    function showTyping() {
         isWaiting = true;
-        if (sendBtn) {
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        if (sendBtn) sendBtn.disabled = true;
+        
+        // 提前创建bot消息气泡（流式输出直接填充到这里）
+        const streamBubble = document.createElement('div');
+        streamBubble.className = 'message bot-message streaming';
+        streamBubble.dataset.timestamp = Date.now();
+        streamBubble.innerHTML = `<div class="message-content"><p></p></div>`;
+        messagesEl.appendChild(streamBubble);
+        scrollBottom();
+        
+        // 显示加载状态
+        const loadingEl = streamBubble.querySelector('p');
+        let dots = 0;
+        const dotTimer = setInterval(() => {
+            dots = (dots + 1) % 4;
+            loadingEl.textContent = '思考中' + '.'.repeat(dots);
+        }, 500);
+        
+        let reply = null;
+        
+        if (useAPIModel) {
+            reply = await streamAI(text, streamBubble);
+        } else {
+            clearInterval(dotTimer);
+            await new Promise(r => setTimeout(r, 300));
+            reply = generateLocalReply(text);
         }
         
-        const indicator = document.createElement('div');
-        indicator.className = 'message bot-message';
-        indicator.id = 'typing-indicator';
-        indicator.innerHTML = `
-            <div class="message-content" style="background:#f0f2ff;max-width:60px;">
-                <div class="typing-dots"><span>.</span><span>.</span><span>.</span></div>
-            </div>
-        `;
-        messagesEl.appendChild(indicator);
-        scrollBottom();
-    }
-    
-    function hideTyping() {
-        isWaiting = false;
-        if (sendBtn) {
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送';
+        clearInterval(dotTimer);
+        
+        // 移除流式光标，添加底部操作栏
+        streamBubble.classList.remove('streaming');
+        
+        if (reply) {
+            streamBubble.querySelector('p').textContent = reply;
+            saveHistory({ type: 'bot', content: reply });
+            RHYTHM.track(reply);
+        } else {
+            const fallback = generateLocalReply(text);
+            streamBubble.querySelector('p').textContent = fallback || '嗯，我在听你说~';
+            saveHistory({ type: 'bot', content: fallback });
         }
-        const indicator = document.getElementById('typing-indicator');
-        if (indicator) indicator.remove();
+        
+        // 添加消息底部操作栏
+        addMessageFooter(streamBubble, 'bot');
+        
+        scrollBottom();
+        isWaiting = false;
+        currentAbortController = null;
+        if (sendBtn) sendBtn.disabled = inputEl?.value.trim().length === 0;
     }
     
-    function addUserMessage(text) {
-        const div = document.createElement('div');
-        div.className = 'message user-message';
-        div.style.marginLeft = 'auto';
-        div.style.marginRight = '0';
-        div.innerHTML = `
-            <div class="message-content" style="background:linear-gradient(135deg,#7c8aff,#5b68e6);color:white;border-radius:18px 18px 4px 18px;">
-                <p>${escapeHtml(text)}</p>
-            </div>
-            <div class="message-time">刚刚</div>
-        `;
-        messagesEl.appendChild(div);
-        scrollBottom();
-        saveHistory({ type: 'user', content: text });
+    // ===== 对话上下文摘要（长对话压缩） =====
+    function buildContextMessages() {
+        const totalHistory = chatHistory;
+        const len = totalHistory.length;
+        
+        // 少于8轮 = 全部发送
+        if (len <= 16) {
+            return totalHistory.map(msg => ({
+                role: msg.type === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            }));
+        }
+        
+        // 超过8轮 → 保留最近6轮 + 早期的摘要
+        const recent = totalHistory.slice(-12); // 最近6轮（12条消息）
+        const earlyMsgs = totalHistory.slice(0, len - 12);
+        
+        // 生成早期对话摘要
+        const userTopics = [];
+        const botTheme = new Set();
+        earlyMsgs.forEach(m => {
+            if (m.type === 'user') {
+                userTopics.push(m.content.substring(0, 30));
+            } else {
+                // 提取bot回复中的关键话题关键词
+                const keywords = m.content.match(/[\u4e00-\u9fa5]{2,4}/g) || [];
+                keywords.slice(0, 3).forEach(k => botTheme.add(k));
+            }
+        });
+        
+        // 构建摘要消息
+        const summary = `[对话摘要] 用户之前谈论了：${userTopics.slice(-5).join('、')}。` +
+                        `我就这些话题进行了回应和陪伴。`;
+        
+        return [
+            { role: 'system', content: summary },
+            ...recent.map(msg => ({
+                role: msg.type === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            }))
+        ];
     }
     
-    function addBotMessage(text) {
-        const div = document.createElement('div');
-        div.className = 'message bot-message';
-        div.innerHTML = `
-            <div class="message-content" style="background:white;border-radius:18px 18px 18px 4px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <p>${escapeHtml(text)}</p>
-            </div>
-            <div class="message-time">刚刚</div>
-        `;
-        messagesEl.appendChild(div);
-        scrollBottom();
-        saveHistory({ type: 'bot', content: text });
+    // ===== AI流式调用（AbortController + 直接写入气泡） =====
+    async function streamAI(userInput, bubbleEl) {
+        if (!AI_CONFIG.enabled || !AI_CONFIG.apiKey) return null;
+        
+        const systemPrompt = buildSystemPrompt();
+        const contextMsgs = buildContextMessages();
+        
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            ...contextMsgs,
+            { role: 'user', content: userInput }
+        ];
+        
+        // 创建AbortController
+        const controller = new AbortController();
+        currentAbortController = controller;
+        
+        const pEl = bubbleEl.querySelector('p');
+        if (!pEl) return null;
+        
+        let fullContent = '';
+        
+        const tryFetch = async (isStreaming) => {
+            const apiUrl = AI_CONFIG.baseURL ? `${AI_CONFIG.baseURL}/chat/completions` : '/api/chat';
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    temperature: currentMode === 'companion' ? 0.9 : 0.7,
+                    max_tokens: currentMode === 'companion' ? 200 : 400,
+                    stream: isStreaming
+                }),
+                signal: controller.signal
+            });
+            return response;
+        };
+        
+        try {
+            // 先试流式
+            const response = await tryFetch(true);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || !trimmed.startsWith('data: ')) continue;
+                    const dataStr = trimmed.substring(6);
+                    if (dataStr === '[DONE]') continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        if (data.error) continue;
+                        if (data.content) {
+                            fullContent += data.content;
+                            pEl.textContent = fullContent;
+                        }
+                    } catch (e) {}
+                }
+            }
+            
+            return fullContent.trim() || null;
+            
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                // 被用户新消息取消了, 不用fallback
+                return null;
+            }
+            // 流式失败 → 尝试非流式（不用创建新气泡，直接在同一个气泡里更新）
+            try {
+                pEl.textContent = '重试中...';
+                const fbRes = await tryFetch(false);
+                const fbData = await fbRes.json();
+                const reply = fbData.choices?.[0]?.message?.content?.trim();
+                if (reply) {
+                    pEl.textContent = reply;
+                    return reply;
+                }
+            } catch (e2) {}
+        }
+        return null;
     }
     
-    function addSystemMessage(text) {
-        const div = document.createElement('div');
-        div.className = 'message system-message';
-        div.innerHTML = `
-            <div class="message-content" style="text-align:center;background:linear-gradient(135deg,#f0f2ff,#fafbff);border:1px solid var(--border);font-size:0.9rem;">
-                <p>${text}</p>
-            </div>
-        `;
-        messagesEl.appendChild(div);
-        scrollBottom();
+    // ===== 本地记忆（免费引擎用） =====
+    let localMemory = {
+        topics: [],        // 聊过的话题
+        lastEmotion: '',   // 上次情绪
+        turnCount: 0,      // 对话轮数
+        usedReplies: {}    // 已经用过的回复（避免重复）
+    };
+    
+    // ===== 本地降级回复 V2（MBTI融合 + 对话记忆） =====
+    function generateLocalReply(userInput) {
+        localMemory.turnCount++;
+        localMemory.topics.push(userInput.substring(0, 20));
+        if (localMemory.topics.length > 10) localMemory.topics.shift();
+        
+        const hasPersona = userSettings.zodiac && userSettings.mbti;
+        const zd = hasPersona ? PERSONALITY.zodiac[userSettings.zodiac] : null;
+        const md = hasPersona ? PERSONALITY.mbti[userSettings.mbti] : null;
+        
+        // 情绪检测
+        const isSad = /难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤/.test(userInput);
+        const isAngry = /生气|愤怒|恨|讨厌|恼火|烦/.test(userInput);
+        const isLonely = /孤单|寂寞|一个人|没人陪|孤独/.test(userInput);
+        const isConfused = /迷茫|困惑|不知道|不确定|纠结|为什么|想不通/.test(userInput);
+        
+        // 记忆上次情绪
+        if (isSad) localMemory.lastEmotion = 'sad';
+        else if (isAngry) localMemory.lastEmotion = 'angry';
+        else if (isLonely) localMemory.lastEmotion = 'lonely';
+        else if (isConfused) localMemory.lastEmotion = 'confused';
+        
+        // 检测是否是连续聊同一个话题（第二次或以上）
+        const isContinuation = localMemory.turnCount > 2 && 
+            localMemory.topics.slice(-2)[0] === localMemory.topics.slice(-1)[0];
+        
+        // 根据MBTI调整回复风格
+        function getMBTIFlavor() {
+            if (!md) return '';
+            // 外向型（E）vs 内向型（I）
+            const eStyle = ['ENFJ','ENFP','ENTJ','ENTP','ESFJ','ESFP','ESTJ','ESTP'];
+            const iStyle = ['INFJ','INFP','INTJ','INTP','ISFJ','ISFP','ISTJ','ISTP'];
+            if (eStyle.includes(userSettings.mbti)) return '热情';
+            if (iStyle.includes(userSettings.mbti)) return '沉稳';
+            return '';
+        }
+        
+        const mbtiFlavor = getMBTIFlavor();
+        
+        function pickUnique(key, options) {
+            if (!localMemory.usedReplies[key]) localMemory.usedReplies[key] = [];
+            const used = localMemory.usedReplies[key];
+            const available = options.filter(o => !used.includes(o));
+            if (available.length === 0) {
+                localMemory.usedReplies[key] = [];
+                return options[Math.floor(Math.random() * options.length)];
+            }
+            const pick = available[Math.floor(Math.random() * available.length)];
+            used.push(pick);
+            if (used.length > 3) used.shift();
+            return pick;
+        }
+        
+        // ===== 陪伴模式 =====
+        if (currentMode === 'companion') {
+            if (isSad) {
+                if (zd) {
+                    const sadPool = {
+                        '白羊': ['别难过了，走！我带你出去吃顿好的', '不开心就发泄出来，我陪你疯', '没啥大不了的，明天又是新的一天'],
+                        '金牛': ['（默默递纸巾）别哭了...想吃点什么不', '难受的话就好好吃一顿吧', '我陪你坐一会儿，什么都不用说'],
+                        '双子': ['哎呀别不开心了，我给你讲个好玩的事', '别丧了，走，我带你去发现点新鲜的', '你这情绪切换得也太慢了，笑一个嘛'],
+                        '巨蟹': ['我知道你心里难受，我在这儿呢', '想哭就哭吧，我陪着你', '慢慢来，我在呢，不怕'],
+                        '狮子': ['谁欺负你了？跟我说，我给你出气', '别难过，你值得更好的', '抬起头来，你可是很耀眼的'],
+                        '处女': ['看你这样我也难受，要不我给你想想办法', '别太难过了，先理一理是什么让你难受', '难受说出来会好一些，我听着'],
+                        '天秤': ['别难过了，我陪你散散步吧', '心情不好的时候要对自己好一点', '我陪你听听音乐放松一下'],
+                        '天蝎': ['我懂你的感受，什么都不用说，我在', '难受就让我陪着你就好', '什么都不用解释，我明白'],
+                        '射手': ['别丧了！明天会更好的，我陪你！', '开心点，人生还有很多好玩的事呢', '走！我带你去看点不一样的'],
+                        '摩羯': ['难受是正常的，先让自己缓一缓', '难过解决不了问题，先照顾好自己', '我理解你的感受，慢慢来'],
+                        '水瓶': ['我理解你的感受，要不换个角度想想', '别顺着难过的思路走，换个角度看', '难受也是一种体验，但它会过去的'],
+                        '双鱼': ['别哭了...我看着也心疼', '我知道你心里面很痛，我在这儿', '你的感受我懂，想哭就哭出来吧']
+                    };
+                    const pool = sadPool[userSettings.zodiac] || ['别太难过了，我在呢'];
+                    if (isContinuation) {
+                        // 连续聊同一个难过话题，换第二组回复
+                        return pool.length > 1 ? pool[1] : pool[0];
+                    }
+                    return pickUnique('sad', pool);
+                }
+                return pickUnique('sad_generic', [
+                    '别太难过了，我在这儿陪着你',
+                    '我知道你现在不好受，我在呢',
+                    '难过就发泄出来吧，我听着'
+                ]);
+            }
+            if (isLonely) return pickUnique('lonely', [
+                '我不是在吗？想说什么我都听着',
+                '一直在这儿呢，不用觉得一个人',
+                '我就在你手机里，随时找我'
+            ]);
+            if (isConfused) return pickUnique('confused', [
+                '想不明白的事就先放放，不急',
+                '纠结的时候停下来喘口气',
+                '有些事想不通就别想了，时间会给你答案'
+            ]);
+            if (isAngry) return pickUnique('angry', [
+                '先消消气，气坏了不值得',
+                '生气的时候别做决定，先冷静下来',
+                '我理解你为什么生气，先深呼吸一下'
+            ]);
+            
+            // 日常回复（星座 + MBTI融合）
+            if (zd) {
+                const dailyPool = {
+                    '白羊': [`今天有什么好玩的事吗？`, `来了啊，聊点啥？`, `今天过得咋样，有没有什么新鲜事`],
+                    '金牛': [`嗯，我在呢。你吃了吗？`, `今天过得怎么样？`, `有什么想说的，我听着呢`],
+                    '双子': [`嘿~今天过得怎么样？`, `有什么新鲜事吗？`, `今天有啥好玩的事分享不`],
+                    '巨蟹': [`今天心情怎么样？想说说吗`, `今天过得还好吗？`, `在想什么呢？可以和我说说`],
+                    '狮子': [`你来了~今天有什么新鲜事？`, `今天过得精彩不？`, `有什么想聊的，我陪你`],
+                    '处女': [`嗯，你说，我听着呢`, `今天有什么想聊的？`, `你说吧，我在认真听`],
+                    '天秤': [`想聊什么都可以哦~`, `今天过得怎么样？`, `今天有什么想分享的吗`],
+                    '天蝎': [`嗯，说吧，我在听`, `你今天状态怎么样`, `有什么想说的都可以告诉我`],
+                    '射手': [`哈喽~今天有什么想聊的？`, `今天过得开心不？`, `来啦~今天有什么话题`],
+                    '摩羯': [`嗯，你说吧`, `今天我在这儿`, `有什么想说的直接说`],
+                    '水瓶': [`哦？今天想聊什么话题？`, `有什么有趣的事吗？`, `随便聊聊吧，什么都可以`],
+                    '双鱼': [`你来了~今天过得好吗`, `今天想和我聊什么？`, `今天心情怎么样，想分享吗`]
+                };
+                
+                // 融合MBTI风格
+                const pool = dailyPool[userSettings.zodiac] || ['嗯，你说，我在听'];
+                let reply = pickUnique('daily', pool);
+                if (mbtiFlavor === '热情' && Math.random() > 0.5) {
+                    reply = reply.replace(/[。？]/, '呀~').replace(/[。？]/, '啊~');
+                }
+                return reply;
+            }
+            return pickUnique('daily_generic', [
+                '嗯，你说，我在听',
+                '我在这儿呢，想说什么都可以',
+                '今天怎么样？想聊聊吗'
+            ]);
+        }
+        
+        // ===== 咨询模式 =====
+        if (isSad || isLonely) return pickUnique('counsel_sad', [
+            '这种情绪是正常的。给自己一些时间和空间，不用急着好起来。',
+            '难受的时候不要一个人扛着，倾诉本身就是一种疗愈。',
+            '允许自己难过，这是爱过的证明。但也要记得，你不是只有这一种情绪。'
+        ]);
+        if (isConfused) return pickUnique('counsel_confused', [
+            '迷茫的时候不妨停下来问问自己：你在乎的到底是什么？',
+            '想不通的时候，别硬想。换个角度或者过段时间再看，答案会浮现。',
+            '困惑往往是改变的信号。你的直觉已经知道答案，只是在等你的理性跟上。'
+        ]);
+        if (isAngry) return pickUnique('counsel_angry', [
+            '愤怒背后往往藏着受伤的感觉。先冷静下来，看看这份生气在保护什么。',
+            '生气是合理的，但不要让愤怒控制你的判断。',
+            '你在生气什么？是这件事本身，还是它勾起了你不愿意面对的东西？'
+        ]);
+        
+        if (zd && md) {
+            // 融合MBTI + 星座的咨询开场
+            const openings = [
+                `${zd.name}和${md.name}的组合来看，${zd.keywords.slice(0,2).join('和')}是这个人的核心特质。你想具体分析哪个方面？`,
+                `从${zd.name}的${zd.element}象特质结合${md.name}的${md.category}型性格来看，这个人处理感情的方式往往是${zd.style}。你遇到了什么具体问题？`,
+                `${md.name}类型的人通常${md.deep.substring(0, 20)}，而${zd.name}又会${zd.love.substring(0, 20)}。这两者结合，你可以说说你的具体情况吗？`
+            ];
+            return pickUnique('counsel_persona', openings);
+        }
+        return pickUnique('counsel_generic', [
+            '你可以和我说说具体发生了什么，我帮你一起分析。',
+            '我在这里，你的每段话我都会认真倾听。',
+            '来吧，告诉我你的故事，我们一起看看。'
+        ]);
+    }
+    
+    // ===== UI辅助函数 =====
+    function scrollBottom() {
+        setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
     }
     
     function escapeHtml(text) {
+        if (!text) return '';
         const d = document.createElement('div');
         d.textContent = text;
         return d.innerHTML;
     }
     
-    function scrollBottom() {
-        setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
+    function getTimeLabel() {
+        const now = new Date();
+        return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    }
+    
+    // ===== 消息底部操作栏（复制 + 反馈） =====
+    function addMessageFooter(msgEl, type) {
+        const footer = document.createElement('div');
+        footer.className = 'message-footer';
+        
+        const time = document.createElement('span');
+        time.className = 'msg-time';
+        time.textContent = getTimeLabel();
+        
+        const actions = document.createElement('div');
+        actions.className = 'msg-actions';
+        
+        // 复制按钮
+        const copyBtn = document.createElement('button');
+        copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+        copyBtn.title = '复制消息';
+        copyBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const text = msgEl.querySelector('.message-content p')?.textContent || '';
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyToast('已复制 📋');
+            }).catch(() => {});
+        });
+        actions.appendChild(copyBtn);
+        
+        // 反馈按钮（仅bot消息）
+        if (type === 'bot') {
+            const likeBtn = document.createElement('button');
+            likeBtn.innerHTML = '<i class="far fa-thumbs-up"></i>';
+            likeBtn.title = '有用';
+            likeBtn.dataset.action = 'like';
+            likeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('liked');
+                if (this.classList.contains('liked')) {
+                    showCopyToast('👍 已标记为有用');
+                }
+            });
+            actions.appendChild(likeBtn);
+            
+            const dislikeBtn = document.createElement('button');
+            dislikeBtn.innerHTML = '<i class="far fa-thumbs-down"></i>';
+            dislikeBtn.title = '不太对';
+            dislikeBtn.dataset.action = 'dislike';
+            dislikeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('liked');
+                if (this.classList.contains('liked')) {
+                    showCopyToast('👎 已记录反馈，会改进');
+                }
+            });
+            actions.appendChild(dislikeBtn);
+        }
+        
+        footer.appendChild(time);
+        footer.appendChild(actions);
+        msgEl.appendChild(footer);
+    }
+    
+    // ===== 情绪检测标签 =====
+    function detectEmotion(text) {
+        if (/难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤|失落/.test(text)) return {tag: 'sad', label: '😢 难过'};
+        if (/生气|愤怒|恨|讨厌|恼火|烦|气|不爽/.test(text)) return {tag: 'angry', label: '😠 生气'};
+        if (/孤单|寂寞|一个人|没人陪|孤独|空虚/.test(text)) return {tag: 'lonely', label: '😔 孤独'};
+        if (/迷茫|困惑|不知道|不确定|纠结|为什么|想不通|怎么办/.test(text)) return {tag: 'confused', label: '🤔 迷茫'};
+        if (/开心|高兴|快乐|幸福|开心|太好|开心/.test(text)) return {tag: 'happy', label: '😊 开心'};
+        return null;
+    }
+    
+    function addUserMessage(text) {
+        const emotion = detectEmotion(text);
+        const div = document.createElement('div');
+        div.className = 'message user-message';
+        div.dataset.timestamp = Date.now();
+        const tagHtml = emotion ? `<span class="emotion-tag ${emotion.tag}">${emotion.label}</span>` : '';
+        div.innerHTML = `<div class="message-content"><p>${tagHtml}${escapeHtml(text)}</p></div>`;
+        messagesEl.appendChild(div);
+        addMessageFooter(div, 'user');
+        scrollBottom();
+        saveHistory({ type: 'user', content: text });
+        if (sendBtn) sendBtn.disabled = true;
+        
+        // 跟踪情绪变化
+        if (emotion) trackEmotion(emotion.tag);
+    }
+    
+    // ===== 情绪跟踪 =====
+    let emotionLog = [];
+    function trackEmotion(tag) {
+        emotionLog.push({
+            emotion: tag,
+            time: getTimeLabel(),
+            timestamp: Date.now()
+        });
+        if (emotionLog.length > 20) emotionLog.shift();
+    }
+    
+    // ===== 对话总结 =====
+    function generateConversationSummary() {
+        const botMsgs = chatHistory.filter(m => m.type === 'bot').length;
+        const userMsgs = chatHistory.filter(m => m.type === 'user').length;
+        const totalTurns = Math.min(userMsgs, botMsgs);
+        
+        // 情绪分布
+        const emoDist = {};
+        emotionLog.forEach(e => { emoDist[e.emotion] = (emoDist[e.emotion] || 0) + 1; });
+        const topEmotion = Object.entries(emoDist).sort((a,b) => b[1]-a[1])[0];
+        
+        // 主要话题
+        const userTexts = chatHistory.filter(m => m.type === 'user').map(m => m.content).join(' ');
+        const topics = [];
+        if (/分手|前任|失恋/.test(userTexts)) topics.push('分手疗愈');
+        if (/难过|伤心|痛苦/.test(userTexts)) topics.push('情绪疏导');
+        if (/想他|想念|放不下/.test(userTexts)) topics.push('戒断期陪伴');
+        if (/怎么办|不知道该/.test(userTexts)) topics.push('决策建议');
+        if (/开心|高兴|分享/.test(userTexts)) topics.push('日常分享');
+        if (topics.length === 0) topics.push('日常陪伴');
+        
+        const panel = document.createElement('div');
+        panel.className = 'summary-panel show';
+        panel.innerHTML = [
+            `<h3><i class="fas fa-chart-simple"></i> 本次对话总结</h3>`,
+            `<div class="summary-stat">`,
+                `<div class="summary-stat-item"><span class="num">${totalTurns}</span><span class="label">轮对话</span></div>`,
+                `<div class="summary-stat-item"><span class="num">${topics.length}</span><span class="label">个话题</span></div>`,
+                `<div class="summary-stat-item"><span class="num">${emotionLog.length}</span><span class="label">次情绪记录</span></div>`,
+                topEmotion ? `<div class="summary-stat-item"><span class="num" style="font-size:1rem">${topEmotion[1]}次</span><span class="label">主要情绪</span></div>` : '',
+            `</div>`,
+            `<div class="summary-section"><h4>💬 主要话题</h4><p>${topics.join('、')}</p></div>`,
+            topEmotion ? `<div class="summary-section"><h4>🎭 情绪特征</h4><p>这次对话中，你的情绪以「${topEmotion[0]==='sad'?'难过':topEmotion[0]==='angry'?'生气':topEmotion[0]==='lonely'?'孤独':topEmotion[0]==='confused'?'迷茫':'开心'}」为主。${topEmotion[0]==='sad'||topEmotion[0]==='lonely'?'给自己一些时间和空间，慢慢来，不着急。':topEmotion[0]==='angry'?'情绪需要出口，说出来会好很多。':'每一次对话都是一次向内看的机会。'}</p></div>` : '',
+            `<div class="summary-section"><h4>🌙 来自小七</h4><p>我会一直在这里陪你。不管你今天经历了什么，明天又是新的一天。💫</p></div>`
+        ].join('');
+        
+        // 插入到消息列表末尾
+        const msgContainer = document.getElementById('chat-messages');
+        msgContainer.appendChild(panel);
+        scrollBottom();
+        
+        showCopyToast('📊 对话总结已生成');
+    }
+    
+    // ===== 复制提示 =====
+    function showCopyToast(msg) {
+        let toast = document.querySelector('.copy-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'copy-toast';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 1200);
     }
     
     function updateCharCount() {
@@ -603,13 +967,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sendBtn) sendBtn.disabled = count === 0 || isWaiting;
     }
     
-    // ===== 历史管理 =====
+    function showToast(message, type) {
+        let toast = document.querySelector('.toast-notification');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = (type === 'success' ? '✅ ' : 'ℹ️ ') + message;
+        requestAnimationFrame(() => toast.style.transform = 'translateX(-50%) translateY(0)');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+            toast.style.transform = 'translateX(-50%) translateY(100px)';
+        }, 2500);
+    }
+    
+    // ===== 对话历史管理 =====
     function saveHistory(msg) {
         chatHistory.push(msg);
         const recent = chatHistory.slice(-100);
-        try {
-            localStorage.setItem('shuxing_chat_history', JSON.stringify(recent));
-        } catch (e) {}
+        try { localStorage.setItem('shuxing_chat_history', JSON.stringify(recent)); } catch (e) {}
     }
     
     function loadChatHistory() {
@@ -622,14 +999,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (msg.type === 'user') {
                         const div = document.createElement('div');
                         div.className = 'message user-message';
-                        div.style.marginLeft = 'auto';
-                        div.style.marginRight = '0';
-                        div.innerHTML = `<div class="message-content" style="background:linear-gradient(135deg,#7c8aff,#5b68e6);color:white;border-radius:18px 18px 4px 18px;"><p>${escapeHtml(msg.content)}</p></div><div class="message-time">之前</div>`;
+                        div.innerHTML = `<div class="message-content"><p>${escapeHtml(msg.content)}</p></div><div class="message-time">之前</div>`;
                         messagesEl.appendChild(div);
                     } else if (msg.type === 'bot') {
                         const div = document.createElement('div');
                         div.className = 'message bot-message';
-                        div.innerHTML = `<div class="message-content" style="background:white;border-radius:18px 18px 18px 4px;"><p>${escapeHtml(msg.content)}</p></div><div class="message-time">之前</div>`;
+                        div.innerHTML = `<div class="message-content"><p>${escapeHtml(msg.content)}</p></div><div class="message-time">之前</div>`;
                         messagesEl.appendChild(div);
                     }
                 });
@@ -642,14 +1017,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!confirm('确定清空当前对话吗？')) return;
         messagesEl.innerHTML = '';
         chatHistory = [];
+        conversationStarted = false;
+        systemPromptBuilt = false;
+        cachedSystemPrompt = '';
+        RHYTHM.lastStructures = [];
         localStorage.removeItem('shuxing_chat_history');
+        
         if (userSettings.zodiac && userSettings.mbti) {
-            const msg = currentMode === 'companion'
-                ? '对话已清空~ 有什么想聊的随时找我哦'
-                : '对话已清空。你可以重新开始聊聊。';
-            addBotMessage(msg);
+            addSystemMessage('💬 对话已清空，重新选择模式即可开始');
         } else {
-            addSystemMessage('💡 先创建人格模型可以获得更好的对话体验');
+            addSystemMessage('💡 建议先创建人格模型以获得更好的对话体验');
         }
     }
     
@@ -671,26 +1048,4 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('对话已导出 ✅', 'success');
     }
 
-    function showToast(message, type) {
-        let toast = document.querySelector('.toast-notification');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            Object.assign(toast.style, {
-                position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%) translateY(100px)',
-                background: 'white', color: '#3d3d5c', padding: '14px 28px', borderRadius: '50px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.15)', transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
-                zIndex: '1000', fontSize: '0.95rem', fontWeight: '500', display: 'flex', alignItems: 'center',
-                gap: '10px', whiteSpace: 'nowrap'
-            });
-            document.body.appendChild(toast);
-        }
-        toast.innerHTML = (type === 'success' ? '✅ ' : 'ℹ️ ') + message;
-        requestAnimationFrame(() => toast.style.transform = 'translateX(-50%) translateY(0)');
-        clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => {
-            toast.style.transform = 'translateX(-50%) translateY(100px)';
-        }, 2500);
-    }
-    
-}
+});

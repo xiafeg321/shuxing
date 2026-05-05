@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="人格洞察与分析 - 基于星座和MBTI的深度分析">
+    <meta name="theme-color" content="#7c8aff">
+    <title>人格洞察 | 数星</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* 分析页专属样式 */
+        .analysis-section {
+            animation: fadeSlideUp 0.5s ease;
+        }
+
+        .insight-card {
+            background: var(--card);
+            border-radius: var(--radius-xl);
+            padding: 32px 28px;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .insight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px var(--shadow-hover);
+        }
+
+        .insight-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .insight-card .card-header i {
+            font-size: 1.5rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .insight-card .card-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+        .insight-card .card-header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 2px 0 0;
+        }
+
+        .profile-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .profile-badge {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px 20px;
+            background: var(--bg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .profile-badge .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .profile-badge .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .profile-badge .sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .insight-text {
+            font-size: 0.95rem;
+            line-height: 1.9;
+            color: var(--text-secondary);
+        }
+        .insight-text strong {
+            color: var(--text);
+        }
+
+        .tag-cloud {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        .tag-cloud .tag-item {
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.82rem;
+            background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+        .tag-cloud .tag-item.weakness {
+            background: linear-gradient(135deg, #fef3c7, #fef9e7);
+            color: #92400e;
+        }
+
+        .traits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .trait-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .trait-item i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .trait-item.positive i { color: #48bb78; }
+        .trait-item.negative i { color: #f56565; }
+
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .history-list {
+            margin-top: 16px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+            background: var(--card);
+        }
+        .history-item:hover {
+            border-color: var(--primary-light);
+            background: var(--bg);
+        }
+        .history-item .info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .history-item .info i {
+            font-size: 1.5rem;
+            color: var(--primary-light);
+        }
+        .history-item .info .names {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .history-item .info .date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .history-item .delete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        .history-item .delete-btn:hover {
+            color: #f56565;
+            border-color: #fed7d7;
+            background: #fff5f5;
+        }
+
+        .empty-state-custom {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+        .empty-state-custom i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: var(--primary-light);
+            opacity: 0.4;
+        }
+        .empty-state-custom p {
+            font-size: 0.95rem;
+        }
+        .empty-state-custom .btn {
+            display: inline-flex;
+            margin-top: 16px;
+            max-width: 240px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-row { flex-direction: column; }
+            .traits-grid { grid-template-columns: 1fr; }
+            .insight-card { padding: 24px 20px; }
+            .action-bar { flex-direction: column; }
+            .action-bar .btn { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-container" id="stars-container"></div>
+    <div class="container">
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            返回首页
+        </a>
+
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon-wrapper" style="width:50px;height:50px;border-radius:14px;">
+                    <i class="fas fa-lightbulb" style="font-size:22px;"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 style="font-size:2rem;">人格洞察</h1>
+                </div>
+            </div>
+            <p class="tagline" style="font-size:0.95rem;">深入理解TA的性格，找到更好的相处方式</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 当前人格模型 -->
+            <div class="insight-card" id="current-profile-section">
+                <div class="card-header">
+                    <i style="background:linear-gradient(135deg,#7c8aff,#a8b2ff);color:white;">&#9733;</i>
+                    <div>
+                        <h3>当前人格模型</h3>
+                        <p>基于你设置的信息生成的深度分析</p>
+                    </div>
+                </div>
+
+                <div id="no-model-state" class="empty-state-custom">
+                    <i class="fas fa-user-astronaut"></i>
+                    <p>还没有创建人格模型</p>
+                    <a href="setup.html" class="btn btn-primary">创建人格模型</a>
+                </div>
+
+                <div id="model-content" style="display:none;">
+                    <!-- 人格信息摘要 -->
+                    <div class="profile-row" id="profile-summary"></div>
+
+                    <!-- 组合洞察 -->
+                    <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#f8f9ff,#f0f2ff);border:1px solid var(--border);">
+                        <div class="card-header" style="margin-bottom:12px;">
+                            <i class="fas fa-star" style="color:var(--primary);font-size:1.2rem;"></i>
+                            <h3 style="font-size:1rem;">人格组合</h3>
+                        </div>
+                        <p class="insight-text" id="insight-combination"></p>
+                    </div>
+
+                    <!-- 沟通风格 -->
+                    <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg);border:1px solid var(--border);">
+                        <div class="card-header" style="margin-bottom:12px;">
+                            <i class="fas fa-comments" style="color:var(--secondary);font-size:1.2rem;"></i>
+                            <h3 style="font-size:1rem;">沟通风格</h3>
+                        </div>
+                        <p class="insight-text" id="insight-communication"></p>
+                    </div>
+
+                    <!-- 在感情中 -->
+                    <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg);border:1px solid var(--border);">
+                        <div class="card-header" style="margin-bottom:12px;">
+                            <i class="fas fa-heart" style="color:var(--accent);font-size:1.2rem;"></i>
+                            <h3 style="font-size:1rem;">在感情中</h3>
+                        </div>
+                        <p class="insight-text" id="insight-love"></p>
+                    </div>
+
+                    <!-- 性格关键词 -->
+                    <div style="margin:16px 0;">
+                        <h4 style="font-size:0.95rem;color:var(--text-secondary);margin-bottom:8px;">✨ 性格关键词</h4>
+                        <div class="tag-cloud" id="keywords-tags"></div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;">
+                        <!-- 优势 -->
+                        <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#f0fcf4,#e8faf0);border:1px solid #b7e4c7;">
+                            <div class="card-header" style="margin-bottom:10px;">
+                                <i class="fas fa-check-circle" style="color:#48bb78;font-size:1.1rem;"></i>
+                                <h3 style="font-size:1rem;color:#2f6b48;">优势</h3>
+                            </div>
+                            <div id="strengths-list"></div>
+                        </div>
+                        <!-- 弱点 -->
+                        <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#fff5f5,#fef2f2);border:1px solid #fed7d7;">
+                            <div class="card-header" style="margin-bottom:10px;">
+                                <i class="fas fa-exclamation-circle" style="color:#f56565;font-size:1.1rem;"></i>
+                                <h3 style="font-size:1rem;color:#9b2c2c;">可能的问题</h3>
+                            </div>
+                            <div id="weaknesses-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- 疗愈建议 -->
+                    <div class="insight-card" style="background:linear-gradient(135deg,#e8f4ff,#f0f8ff);border:1px solid #b7daf9;">
+                        <div class="card-header" style="margin-bottom:12px;">
+                            <i class="fas fa-heartbeat" style="color:#3b82f6;font-size:1.2rem;"></i>
+                            <h3 style="font-size:1rem;">💝 疗愈与建议</h3>
+                        </div>
+                        <p class="insight-text" id="insight-advice"></p>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="action-bar">
+                        <a href="chat.html" class="btn btn-primary" style="max-width:none;flex:1;">
+                            <i class="fas fa-comments"></i>
+                            开始对话
+                        </a>
+                        <a href="setup.html" class="btn btn-secondary" style="max-width:none;flex:1;">
+                            <i class="fas fa-edit"></i>
+                            修改设置
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史模型 -->
+            <div class="insight-card" id="history-section">
+                <div class="card-header">
+                    <i style="background:linear-gradient(135deg,#f6a5b8,#ffb3a0);color:white;">&#9801;</i>
+                    <div>
+                        <h3>历史模型</h3>
+                        <p>之前创建和分析过的人格模型</p>
+                    </div>
+                </div>
+                <div id="history-list-container">
+                    <div class="empty-state-custom" id="history-empty">
+                        <i class="fas fa-history"></i>
+                        <p>还没有保存的历史模型</p>
+                    </div>
+                </div>
+                <div id="history-items" style="display:none;" class="history-list"></div>
+                <button class="btn btn-secondary" id="clear-history-btn" style="display:none;max-width:none;margin-top:12px;">
+                    <i class="fas fa-trash"></i>
+                    清空历史记录
+                </button>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2026 数星 · 温暖陪伴，治愈心灵</p>
+        </footer>
+    </div>
+
+    <script src="js/star-effects.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('stars-container');
+            if (container && window.StarEffects) StarEffects.start(container);
+        });
+    </script>
+    <script src="js/personality-data.js"></script>
+    <script>
+        // ===== 分析页面脚本 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const PERSONALITY = window.PERSONALITY;
+            const noModelState = document.getElementById('no-model-state');
+            const modelContent = document.getElementById('model-content');
+            const profileSummary = document.getElementById('profile-summary');
+            const insightComb = document.getElementById('insight-combination');
+            const insightComm = document.getElementById('insight-communication');
+            const insightLove = document.getElementById('insight-love');
+            const insightAdvice = document.getElementById('insight-advice');
+            const keywordsTags = document.getElementById('keywords-tags');
+            const strengthsList = document.getElementById('strengths-list');
+            const weaknessesList = document.getElementById('weaknesses-list');
+            const historyContainer = document.getElementById('history-items');
+            const historyEmpty = document.getElementById('history-empty');
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+            // 加载当前模型
+            loadCurrentModel();
+            loadHistory();
+
+            function loadCurrentModel() {
+                try {
+                    const saved = localStorage.getItem('shuxing_user_settings');
+                    if (!saved) { showNoModel(); return; }
+
+                    const data = JSON.parse(saved);
+                    if (!data.zodiac || !data.mbti) { showNoModel(); return; }
+
+                    noModelState.style.display = 'none';
+                    modelContent.style.display = 'block';
+
+                    const zd = PERSONALITY.zodiac[data.zodiac];
+                    const md = PERSONALITY.mbti[data.mbti];
+                    if (!zd || !md) { showNoModel(); return; }
+
+                    // 个人信息摘要
+                    profileSummary.innerHTML = `
+                        <div class="profile-badge">
+                            <div class="label">星座</div>
+                            <div class="value">${zd.symbol} ${zd.name}</div>
+                            <div class="sub">${zd.element}象星座 · ${zd.trait}</div>
+                        </div>
+                        <div class="profile-badge">
+                            <div class="label">MBTI</div>
+                            <div class="value">${md.name}</div>
+                            <div class="sub">${md.category} · ${md.trait}</div>
+                        </div>
+                        <div class="profile-badge">
+                            <div class="label">元素 × 类别</div>
+                            <div class="value">${zd.element}象 · ${md.category}</div>
+                            <div class="sub">性格组合特征</div>
+                        </div>
+                    `;
+
+                    // 组合洞察
+                    const insight = PERSONALITY.getCombinationInsight(data.zodiac, data.mbti);
+                    insightComb.textContent = insight.elementCategory || '独特的人格组合';
+                    insightComm.textContent = insight.communication || (zd.style + ' ' + md.style);
+                    insightLove.textContent = zd.love || zd.deep;
+                    insightAdvice.textContent = insight.healingAdvice || '给自己一些时间和空间，慢慢疗愈。';
+
+                    // 关键词标签
+                    keywordsTags.innerHTML = '';
+                    (zd.keywords || []).forEach(kw => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag-item';
+                        tag.textContent = kw;
+                        keywordsTags.appendChild(tag);
+                    });
+                    (md.keywords || []).forEach(kw => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag-item';
+                        tag.textContent = kw;
+                        keywordsTags.appendChild(tag);
+                    });
+
+                    // 优势
+                    strengthsList.innerHTML = '';
+                    (zd.strengths || []).forEach(s => {
+                        const item = document.createElement('div');
+                        item.className = 'trait-item positive';
+                        item.innerHTML = `<i class="fas fa-plus-circle"></i><span>${s}</span>`;
+                        strengthsList.appendChild(item);
+                    });
+
+                    // 弱点
+                    weaknessesList.innerHTML = '';
+                    (zd.weaknesses || []).forEach(w => {
+                        const item = document.createElement('div');
+                        item.className = 'trait-item negative';
+                        item.innerHTML = `<i class="fas fa-minus-circle"></i><span>${w}</span>`;
+                        weaknessesList.appendChild(item);
+                    });
+
+                } catch (e) {
+                    showNoModel();
+                    console.error('加载失败:', e);
+                }
+            }
+
+            function showNoModel() {
+                if (noModelState) noModelState.style.display = 'block';
+                if (modelContent) modelContent.style.display = 'none';
+            }
+
+            // ===== 历史模型管理 =====
+            function loadHistory() {
+                try {
+                    const history = JSON.parse(localStorage.getItem('shuxing_model_history') || '[]');
+                    if (history.length === 0) {
+                        historyEmpty.style.display = 'block';
+                        historyContainer.style.display = 'none';
+                        if (clearHistoryBtn) clearHistoryBtn.style.display = 'none';
+                        return;
+                    }
+
+                    historyEmpty.style.display = 'none';
+                    historyContainer.style.display = 'block';
+                    if (clearHistoryBtn) clearHistoryBtn.style.display = 'block';
+                    historyContainer.innerHTML = '';
+
+                    history.forEach((model, index) => {
+                        const zd = model.zodiac ? PERSONALITY.zodiac[model.zodiac] : null;
+                        const md = model.mbti ? PERSONALITY.mbti[model.mbti] : null;
+                        const zName = zd ? zd.name : (model.zodiac || '未知');
+                        const mName = md ? md.name : (model.mbti || '未知');
+
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        const dateStr = model.createdAt 
+                            ? new Date(model.createdAt).toLocaleDateString('zh-CN')
+                            : '未知日期';
+                        item.innerHTML = `
+                            <div class="info">
+                                <i class="fas fa-user-circle"></i>
+                                <div>
+                                    <div class="names">${zName} · ${mName}</div>
+                                    <div class="date">${dateStr}</div>
+                                </div>
+                            </div>
+                            <button class="delete-btn" data-index="${index}" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        `;
+                        // 点击加载该模型
+                        item.addEventListener('click', function(e) {
+                            if (e.target.closest('.delete-btn')) return;
+                            // 加载到当前设置
+                            const settings = { zodiac: model.zodiac, mbti: model.mbti, chatHistory: model.chatHistory || '' };
+                            localStorage.setItem('shuxing_user_settings', JSON.stringify(settings));
+                            showToast('已加载模型：' + zName + ' · ' + mName, 'success');
+                            setTimeout(() => location.reload(), 500);
+                        });
+                        // 删除按钮
+                        item.querySelector('.delete-btn').addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (!confirm('确定删除这个模型吗？')) return;
+                            history.splice(parseInt(this.dataset.index), 1);
+                            localStorage.setItem('shuxing_model_history', JSON.stringify(history));
+                            loadHistory();
+                            showToast('已删除', 'success');
+                        });
+                        historyContainer.appendChild(item);
+                    });
+
+                    // 清空全部
+                    if (clearHistoryBtn) {
+                        clearHistoryBtn.onclick = function() {
+                            if (!confirm('确定清空所有历史模型吗？')) return;
+                            localStorage.setItem('shuxing_model_history', '[]');
+                            loadHistory();
+                            showToast('已清空全部历史记录', 'success');
+                        };
+                    }
+                } catch (e) {
+                    console.error('加载历史失败:', e);
+                }
+            }
+
+            function showToast(message, type) {
+                let toast = document.querySelector('.toast-notification');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.className = 'toast-notification';
+                    document.body.appendChild(toast);
+                }
+                const icon = type === 'success' ? '✅ ' : 'ℹ️ ';
+                toast.innerHTML = icon + message;
+                requestAnimationFrame(() => toast.style.transform = 'translateX(-50%) translateY(0)');
+                clearTimeout(toast._timer);
+                toast._timer = setTimeout(() => {
+                    toast.style.transform = 'translateX(-50%) translateY(100px)';
+                }, 2500);
+            }
+        });
+    </script>
+</body>
+</html>
