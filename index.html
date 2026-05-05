@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="数星 - 基于星座和MBTI的情感陪伴工具，温暖陪伴，治愈心灵">
+    <meta name="theme-color" content="#7c8aff">
+    <title>数星 | 再陪我数次星星</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 星光背景 -->
+    <div class="stars-container" id="stars-container"></div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon-wrapper">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>数星</h1>
+                    <span class="subtitle">再陪我数次星星</span>
+                </div>
+            </div>
+            <p class="tagline">从星光中寻找温暖，在陪伴里治愈心灵</p>
+        </header>
+
+        <!-- 欢迎卡片 -->
+        <main class="main-content">
+            <div class="welcome-card">
+                <div class="card-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h2>欢迎回到数星</h2>
+                <p class="description">
+                    这里是一个温暖的情感陪伴空间。<br>
+                    我们理解失去的痛苦，也相信星光能照亮前路。
+                </p>
+                
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div>
+                            <h3>前任风格陪伴</h3>
+                            <p>基于星座和MBTI，模拟熟悉的聊天风格</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-hands-helping"></i>
+                        </div>
+                        <div>
+                            <h3>情感咨询开导</h3>
+                            <p>专业的情感复盘，帮助你理清思绪</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <h3>安全私密空间</h3>
+                            <p>完全匿名，你的故事只属于你</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-buttons" id="main-actions">
+                    <a href="setup.html" class="btn btn-primary" id="setup-btn">
+                        <i class="fas fa-user-astronaut"></i>
+                        <span>创建人格模型</span>
+                    </a>
+                    <a href="chat.html" class="btn btn-secondary" id="start-chat-btn" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <span>开始对话</span>
+                    </a>
+                    <button class="btn btn-secondary" id="learnMore">
+                        <i class="fas fa-info-circle"></i>
+                        <span>了解更多</span>
+                    </button>
+                </div>
+                
+                <!-- 已设置提示 -->
+                <div class="setup-status" id="setup-status" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <p>
+                        已设置：<strong id="current-persona"></strong>
+                        <a href="setup.html" class="edit-link">修改设置</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 使用说明（折叠） -->
+            <div class="instructions" id="instructions" style="display: none;">
+                <h3><i class="fas fa-book-open"></i> 如何使用数星</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>第一步：创建人格模型</strong>
+                        <p>选择TA的星座和MBTI，上传一段聊天记录</p>
+                    </li>
+                    <li>
+                        <strong>第二步：选择对话模式</strong>
+                        <p>陪伴对话 — 像TA一样陪你聊天<br>情感咨询 — 帮你分析情感问题</p>
+                    </li>
+                    <li>
+                        <strong>第三步：开始对话</strong>
+                        <p>与AI进行对话，获得温暖陪伴或专业建议</p>
+                    </li>
+                    <li>
+                        <strong>第四步：情感成长</strong>
+                        <p>在对话中理清思绪，逐步走出情感困境</p>
+                    </li>
+                </ol>
+                
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p><strong>重要提示：</strong>本产品为情感陪伴工具，非专业心理咨询。如情绪持续低落，请寻求专业帮助。</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>© 2026 数星 · 源于真实情感，创造温暖价值</p>
+            <p class="inspiration">送给每一个在星光下寻找方向的人</p>
+            <div class="footer-links">
+                <a href="setup.html" class="footer-link"><i class="fas fa-user-astronaut"></i> 创建模型</a>
+                <a href="analysis.html" class="footer-link"><i class="fas fa-lightbulb"></i> 人格洞察</a>
+                <a href="chat.html" class="footer-link"><i class="fas fa-comments"></i> 开始对话</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

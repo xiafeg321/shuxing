@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="开始对话 - 基于星座和MBTI的情感陪伴">
+    <meta name="theme-color" content="#7c8aff">
+    <title>对话 | 数星</title>
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/chat.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="stars-container" id="stars-container"></div>
+
+    <div class="container" style="max-width:920px;">
+        <!-- 对话页头部 -->
+        <a href="index.html" class="back-btn" style="margin-bottom:8px;">
+            <i class="fas fa-arrow-left"></i>
+            返回首页
+        </a>
+
+        <!-- ===== 模式选择页 ===== -->
+        <div class="mode-selection" id="mode-selection">
+            <div class="mode-selection-header">
+                <div class="logo" style="margin-bottom:20px;">
+                    <div class="logo-icon-wrapper" style="width:50px;height:50px;border-radius:14px;">
+                        <i class="fas fa-star" style="font-size:22px;"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1 style="font-size:2rem;">开始对话</h1>
+                    </div>
+                </div>
+                <p>选择你需要的对话模式，我在这里陪你</p>
+            </div>
+
+            <div class="mode-cards">
+                <!-- 陪伴对话模式 -->
+                <div class="mode-card" id="companion-mode-card">
+                    <div class="mode-card-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>陪伴对话</h3>
+                    <p>用TA的说话风格陪你聊天<br>感到孤独或有话想说的时候<br>像朋友一样陪你</p>
+                    <span class="mode-card-badge">适合：想聊天的时候</span>
+                </div>
+
+                <!-- 情感咨询模式 -->
+                <div class="mode-card" id="counseling-mode-card">
+                    <div class="mode-card-icon">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h3>情感咨询</h3>
+                    <p>专业情感分析和开导<br>帮你理清思绪、复盘关系<br>从不同角度看待问题</p>
+                    <span class="mode-card-badge">适合：需要建议和分析</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 对话界面 ===== -->
+        <div class="chat-interface" id="chat-interface">
+            <!-- 头部 -->
+            <div class="chat-header">
+                <div class="chat-header-avatar">
+                    <i class="fas fa-star" id="mode-icon"></i>
+                </div>
+                <div class="chat-header-info">
+                    <h3 id="mode-title">陪伴对话</h3>
+                    <span class="persona-hint" id="persona-info">基于人格风格生成回复</span>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="chat-header-btn" id="theme-toggle-btn" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="chat-header-btn" id="summary-btn" title="对话总结">
+                        <i class="fas fa-chart-simple"></i>
+                    </button>
+                    <button class="chat-header-btn" id="clear-chat-btn" title="清空对话">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                    <button class="chat-header-btn" id="export-chat-btn" title="导出对话">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="chat-header-btn" id="help-btn" title="使用帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 消息区域 -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- 消息通过JS动态添加 -->
+            </div>
+
+            <!-- 快速回复 -->
+            <div class="quick-replies" id="quick-replies">
+                <button class="quick-reply" data-text="今天心情不太好">今天心情不太好</button>
+                <button class="quick-reply" data-text="好想找个人说说话">好想找个人说说话</button>
+                <button class="quick-reply" data-text="能陪我一会吗">能陪我一会吗</button>
+                <button class="quick-reply" data-text="我好像还没走出来">我好像还没走出来</button>
+            </div>
+
+            <!-- 模式切换 -->
+            <div class="mode-switch-wrapper">
+                <button class="mode-switch-btn" id="switch-mode-btn">
+                    <i class="fas fa-exchange-alt"></i>
+                    切换到咨询模式
+                </button>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <textarea 
+                        class="chat-input-field"
+                        id="message-input"
+                        placeholder="和我说说吧..."
+                        rows="1"
+                        maxlength="500"></textarea>
+                    <button class="chat-send-btn" id="send-btn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="chat-input-footer">
+                    <span class="chat-mode-indicator">
+                        <i class="fas fa-circle" style="color:#48bb78;font-size:0.55rem;"></i>
+                        <span id="mode-indicator">AI 在线</span>
+                        <span id="model-badge" style="background:#e8eaff;color:#5c6bcc;border-radius:4px;padding:1px 6px;font-size:0.7rem;margin-left:4px;cursor:pointer;" title="点击切换模型">🌐 DeepSeek</span>
+                    </span>
+                    <span class="char-count">
+                        <span id="char-count">0</span>/500
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 帮助弹窗 ===== -->
+        <div class="help-modal" id="help-modal">
+            <div class="help-modal-content">
+                <h3><i class="fas fa-star"></i> 使用帮助</h3>
+                
+                <div class="help-section">
+                    <h4>💬 两种对话模式</h4>
+                    <ul>
+                        <li><i class="fas fa-heart"></i> <strong>陪伴对话</strong> — 模拟TA的聊天风格，给你熟悉的陪伴感</li>
+                        <li><i class="fas fa-hands-helping"></i> <strong>情感咨询</strong> — 基于人格特征分析情感问题，提供疗愈建议</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h4>🎯 使用技巧</h4>
+                    <ul>
+                        <li><i class="fas fa-user-astronaut"></i> 先创建人格模型效果最好，对话会更贴切</li>
+                        <li><i class="fas fa-comment-dots"></i> 提供聊天记录可让AI学习TA的说话风格</li>
+                        <li><i class="fas fa-exchange-alt"></i> 随时可以切换对话模式</li>
+                        <li><i class="fas fa-eraser"></i> 清除对话不会影响人格模型设置</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h4>⚠️ 重要提示</h4>
+                    <ul>
+                        <li><i class="fas fa-shield-alt"></i> 所有对话记录存储在本地，不会上传</li>
+                        <li><i class="fas fa-heart-broken"></i> 如有严重情绪问题，请寻求专业心理帮助</li>
+                    </ul>
+                </div>
+
+                <button class="help-modal-close" id="close-help-modal">
+                    我知道了
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/star-effects.js?v=2"></script>
+    <script>
+        // chat页面加载流星特效（模式选择页）
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('stars-container');
+            if (container && window.StarEffects) {
+                StarEffects.start(container);
+            }
+        });
+    </script>
+    <script src="js/personality-data.js"></script>
+    <script src="js/chat.js?v=4"></script>
+</body>
+</html>
