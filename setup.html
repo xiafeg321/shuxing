@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="创建人格模型 - 选择星座和MBTI，上传聊天记录">
+    <meta name="description" content="设置人格模型 - 数星情感陪伴">
     <meta name="theme-color" content="#7c8aff">
-    <title>创建人格模型 | 数星</title>
+    <title>人格设置 | 数星</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* 覆盖内联样式 - 使用新CSS类 */
         .setup-card {
             background: var(--card);
             border-radius: var(--radius-xl);
@@ -19,15 +18,23 @@
             border: 1px solid rgba(255,255,255,0.5);
             margin-bottom: var(--space-lg);
         }
-        
-        /* MBTI 类别颜色 */
         .category-analyst { background: linear-gradient(135deg, #e0e7ff, #ede9fe); color: #5b5fe6; }
         .category-diplomat { background: linear-gradient(135deg, #e0f2fe, #f0fdf4); color: #3b82f6; }
         .category-sentinel { background: linear-gradient(135deg, #fef3c7, #fef9e7); color: #b8860b; }
         .category-explorer { background: linear-gradient(135deg, #fce4ec, #fdf2f8); color: #e0406b; }
         
+        /* 快速提示条 */
+        .quick-tip {
+            background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+            border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
+            font-size: 0.85rem; color: #5b21b6;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .quick-tip i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+        .quick-tip p { margin: 0; line-height: 1.5; }
+        
         @media (max-width: 768px) {
-            .setup-card { padding: 24px 20px; }
+            .setup-card { padding: 24px 16px; }
         }
     </style>
 </head>
@@ -41,13 +48,13 @@
         <header class="header">
             <div class="logo">
                 <div class="logo-icon-wrapper" style="width:50px;height:50px;border-radius:14px;">
-                    <i class="fas fa-user-astronaut" style="font-size:22px;"></i>
+                    <i class="fas fa-star" style="font-size:22px;"></i>
                 </div>
                 <div class="logo-text">
-                    <h1 style="font-size:2rem;">创建人格模型</h1>
+                    <h1 style="font-size:2rem;">认识她</h1>
                 </div>
             </div>
-            <p class="tagline" style="font-size:0.95rem;">了解TA的星座和MBTI，才能更好地陪伴你</p>
+            <p class="tagline" style="font-size:0.95rem;">告诉我她的信息，让我们慢慢熟悉起来</p>
         </header>
 
         <main class="main-content">
@@ -56,32 +63,38 @@
                 <div class="progress-steps">
                     <div class="progress-step active" data-step="1">
                         <div class="step-number">1</div>
-                        <div class="step-label">星座选择</div>
+                        <div class="step-label">星座</div>
                     </div>
                     <div class="progress-step" data-step="2">
                         <div class="step-number">2</div>
-                        <div class="step-label">MBTI类型</div>
+                        <div class="step-label">MBTI</div>
                     </div>
                     <div class="progress-step" data-step="3">
                         <div class="step-number">3</div>
-                        <div class="step-label">聊天记录</div>
+                        <div class="step-label">了解更多</div>
                     </div>
                     <div class="progress-step" data-step="4">
-                        <div class="step-number">4</div>
+                        <div class="step-number">✨</div>
                         <div class="step-label">完成</div>
                     </div>
                 </div>
 
+                <!-- 快速提示 -->
+                <div class="quick-tip">
+                    <i class="fas fa-star"></i>
+                    <p>先快速设置她的星座和MBTI就能开始聊天啦～ 说得越多，她越像那个人 🌟</p>
+                </div>
+
                 <!-- 步骤1：星座选择 -->
                 <div class="setup-section" id="step-1">
-                    <h2><i class="fas fa-star-and-crescent"></i> 选择TA的星座</h2>
-                    <p class="section-description">星座反映了一个人的基本性格底色</p>
+                    <h2><i class="fas fa-star-and-crescent"></i> 她是什么星座？</h2>
+                    <p class="section-description">星座可以看出一个人的性格底色</p>
                     
                     <div class="selection-grid" id="zodiac-grid"></div>
                     
                     <div class="step-actions">
                         <button class="btn btn-primary next-step" data-next="2" style="max-width:none;">
-                            下一步：选择MBTI
+                            下一步：了解她的性格
                             <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -89,8 +102,8 @@
 
                 <!-- 步骤2：MBTI选择 -->
                 <div class="setup-section" id="step-2" style="display:none;">
-                    <h2><i class="fas fa-brain"></i> 选择TA的MBTI类型</h2>
-                    <p class="section-description">MBTI揭示了思维模式和沟通风格</p>
+                    <h2><i class="fas fa-brain"></i> 她的性格类型是？</h2>
+                    <p class="section-description">MBTI能帮助理解她的思维方式和沟通习惯</p>
                     
                     <div class="selection-grid" id="mbti-grid"></div>
                     
@@ -100,39 +113,43 @@
                             上一步
                         </button>
                         <button class="btn btn-primary next-step" data-next="3" style="max-width:none;">
-                            下一步：聊天记录
+                            下一步：说说她的故事
                             <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- 步骤3：聊天记录 -->
+                <!-- 步骤3：了解更多（可选） -->
                 <div class="setup-section" id="step-3" style="display:none;">
-                    <h2><i class="fas fa-comment-dots"></i> 提供聊天记录（可选）</h2>
-                    <p class="section-description">帮助我们理解TA的说话风格和习惯</p>
+                    <h2><i class="fas fa-comment-dots"></i> 再多说说她（可选）</h2>
+                    <p class="section-description">告诉我更多关于她的信息，我可以学得更像～</p>
                     
-                    <textarea 
-                        class="chat-textarea"
-                        id="chat-history" 
-                        placeholder="请粘贴或输入你与TA的典型对话...&#10;&#10;示例：&#10;你今天心情怎么样？&#10;还好啦，就是有点累~&#10;那早点休息哦，明天再聊！&#10;嗯嗯，你也早点睡，晚安~"
-                        rows="8"
-                        maxlength="2000"></textarea>
-                    
-                    <div style="text-align:right;color:var(--text-muted);font-size:0.85rem;margin-top:-12px;">
-                        <span id="chat-char-count">0</span>/2000 字
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+                            <i class="fas fa-file-alt"></i> 导入聊天记录
+                        </label>
+                        <textarea 
+                            class="chat-textarea"
+                            id="chat-history" 
+                            placeholder="可以粘贴一段你们的典型对话...&#10;&#10;你今天心情怎么样？&#10;还好啦，就是有点累~&#10;那早点休息哦，明天再聊！"
+                            rows="6"
+                            maxlength="2000"></textarea>
+                        <div style="text-align:right;color:var(--text-muted);font-size:0.85rem;margin-top:-8px;">
+                            <span id="chat-char-count">0</span>/2000
+                        </div>
                     </div>
                     
                     <div class="file-upload-area" id="file-upload-area">
-                        <div style="font-size:40px;color:var(--primary-light);margin-bottom:12px;">
+                        <div style="font-size:36px;color:var(--primary-light);margin-bottom:8px;">
                             <i class="fas fa-file-upload"></i>
                         </div>
-                        <div style="color:var(--text-secondary);margin-bottom:6px;font-size:1rem;font-weight:500;">
+                        <div style="color:var(--text-secondary);margin-bottom:4px;font-size:0.9rem;font-weight:500;">
                             或者上传聊天记录文件
                         </div>
-                        <div style="color:var(--text-muted);margin-bottom:16px;font-size:0.85rem;">
+                        <div style="color:var(--text-muted);margin-bottom:12px;font-size:0.82rem;">
                             支持 .txt 格式，最大2MB
                         </div>
-                        <button class="btn btn-secondary" id="file-select-btn" style="display:inline-flex;padding:10px 24px;font-size:0.9rem;max-width:none;width:auto;">
+                        <button class="btn btn-secondary" id="file-select-btn" style="display:inline-flex;padding:8px 20px;font-size:0.85rem;max-width:none;width:auto;">
                             <i class="fas fa-folder-open"></i>
                             选择文件
                         </button>
@@ -145,7 +162,7 @@
                             上一步
                         </button>
                         <button class="btn btn-primary next-step" data-next="4" style="max-width:none;">
-                            完成设置
+                            完成，开始吧 ✨
                             <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -153,47 +170,46 @@
 
                 <!-- 步骤4：完成 -->
                 <div class="setup-section" id="step-4" style="display:none;">
-                    <h2><i class="fas fa-check-circle" style="color:#48bb78;"></i> 人格模型创建完成</h2>
-                    <p class="section-description">恭喜！你已经完成了人格模型的设置 ✨</p>
+                    <h2><i class="fas fa-check-circle" style="color:#48bb78;"></i> 准备好了 ✨</h2>
+                    <p class="section-description">我已经记住她了，随时可以开始</p>
                     
                     <div class="summary-card">
-                        <h3 style="color:var(--text);margin:0 0 16px;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <h3 style="color:var(--text);margin:0 0 16px;font-size:1.05rem;display:flex;align-items:center;gap:8px;">
                             <i class="fas fa-user-circle" style="color:var(--primary);"></i>
-                            人格模型摘要
+                            记住的信息
                         </h3>
-                        
                         <div class="summary-item">
                             <span class="label"><i class="fas fa-star-and-crescent" style="color:var(--primary);margin-right:6px;"></i>星座</span>
                             <span class="value" id="summary-zodiac">未选择</span>
                         </div>
                         <div class="summary-item">
-                            <span class="label"><i class="fas fa-brain" style="color:var(--accent);margin-right:6px;"></i>MBTI类型</span>
+                            <span class="label"><i class="fas fa-brain" style="color:var(--accent);margin-right:6px;"></i>MBTI</span>
                             <span class="value" id="summary-mbti">未选择</span>
                         </div>
                         <div class="summary-item">
                             <span class="label"><i class="fas fa-comment-dots" style="color:var(--secondary);margin-right:6px;"></i>聊天记录</span>
-                            <span class="value" id="summary-chat">未提供</span>
+                            <span class="value" id="summary-chat">未提供（后面慢慢告诉我也行）</span>
                         </div>
                     </div>
                     
                     <!-- 人格洞察 -->
                     <div class="summary-card" id="insight-card" style="background:linear-gradient(135deg,#f8f9ff,#f0f2ff);border-color:var(--primary-light);">
-                        <h3 style="color:var(--text);margin:0 0 12px;font-size:1.05rem;display:flex;align-items:center;gap:8px;">
+                        <h3 style="color:var(--text);margin:0 0 12px;font-size:1rem;display:flex;align-items:center;gap:8px;">
                             <i class="fas fa-lightbulb" style="color:var(--primary);"></i>
-                            人格洞察
+                            关于她
                         </h3>
-                        <p id="personality-insight" style="color:var(--text-secondary);font-size:0.95rem;line-height:1.8;margin:0;">
-                            正在生成人格洞察...
+                        <p id="personality-insight" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.8;margin:0;">
+                            正在生成洞察...
                         </p>
                     </div>
                     
                     <div class="step-actions">
                         <button class="btn btn-secondary prev-step" data-prev="3">
                             <i class="fas fa-edit"></i>
-                            修改设置
+                            修改
                         </button>
                         <button class="btn btn-success" id="complete-btn" style="max-width:none;">
-                            <i class="fas fa-rocket"></i>
+                            <i class="fas fa-star"></i>
                             开始对话
                         </button>
                     </div>
@@ -204,7 +220,7 @@
         <footer class="footer">
             <p class="disclaimer" style="margin:0 auto 12px;max-width:500px;font-size:0.82rem;">
                 <i class="fas fa-exclamation-circle"></i>
-                本服务为情感陪伴工具，非专业心理咨询
+                数星是情感陪伴工具，非专业心理咨询
             </p>
         </footer>
     </div>

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="开始对话 - 基于星座和MBTI的情感陪伴">
+    <meta name="description" content="数星对话 - 星伴陪伴 / 星析分析">
     <meta name="theme-color" content="#7c8aff">
-    <title>对话 | 数星</title>
+    <title>数星 · 对话</title>
     <link rel="stylesheet" href="css/style.css?v=2">
     <link rel="stylesheet" href="css/chat.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -32,28 +32,28 @@
                         <h1 style="font-size:2rem;">开始对话</h1>
                     </div>
                 </div>
-                <p>选择你需要的对话模式，我在这里陪你</p>
+                <p>选择你需要的模式，我在这里陪你</p>
             </div>
 
             <div class="mode-cards">
-                <!-- 陪伴对话模式 -->
+                <!-- 星伴模式 -->
                 <div class="mode-card" id="companion-mode-card">
                     <div class="mode-card-icon">
-                        <i class="fas fa-heart"></i>
+                        <i class="fas fa-star"></i>
                     </div>
-                    <h3>陪伴对话</h3>
-                    <p>用TA的说话风格陪你聊天<br>感到孤独或有话想说的时候<br>像朋友一样陪你</p>
-                    <span class="mode-card-badge">适合：想聊天的时候</span>
+                    <h3>🌟 星伴</h3>
+                    <p>让那个人"活"在对话里<br>用TA的说话风格陪你聊天<br>感到孤独或有话想说的时候</p>
+                    <span class="mode-card-badge">适合：想再和她说说话</span>
                 </div>
 
-                <!-- 情感咨询模式 -->
+                <!-- 星析模式 -->
                 <div class="mode-card" id="counseling-mode-card">
                     <div class="mode-card-icon">
-                        <i class="fas fa-hands-helping"></i>
+                        <i class="fas fa-compass"></i>
                     </div>
-                    <h3>情感咨询</h3>
-                    <p>专业情感分析和开导<br>帮你理清思绪、复盘关系<br>从不同角度看待问题</p>
-                    <span class="mode-card-badge">适合：需要建议和分析</span>
+                    <h3>🔍 星析</h3>
+                    <p>帮你分析这段关系<br>为什么分开？还有没有可能？<br>接下来该怎么做？</p>
+                    <span class="mode-card-badge">适合：需要分析和建议</span>
                 </div>
             </div>
         </div>
@@ -66,8 +66,8 @@
                     <i class="fas fa-star" id="mode-icon"></i>
                 </div>
                 <div class="chat-header-info">
-                    <h3 id="mode-title">陪伴对话</h3>
-                    <span class="persona-hint" id="persona-info">基于人格风格生成回复</span>
+                    <h3 id="mode-title">🌟 星伴</h3>
+                    <span class="persona-hint" id="persona-info">让那个人"活"在对话里</span>
                 </div>
                 <div class="chat-header-actions">
                     <button class="chat-header-btn" id="theme-toggle-btn" title="切换主题">
@@ -93,7 +93,7 @@
                 <!-- 消息通过JS动态添加 -->
             </div>
 
-            <!-- 快速回复 -->
+            <!-- 快速回复（星伴模式） -->
             <div class="quick-replies" id="quick-replies">
                 <button class="quick-reply" data-text="今天心情不太好">今天心情不太好</button>
                 <button class="quick-reply" data-text="好想找个人说说话">好想找个人说说话</button>
@@ -105,7 +105,7 @@
             <div class="mode-switch-wrapper">
                 <button class="mode-switch-btn" id="switch-mode-btn">
                     <i class="fas fa-exchange-alt"></i>
-                    切换到咨询模式
+                    切换到星析模式
                 </button>
             </div>
 
@@ -125,7 +125,7 @@
                 <div class="chat-input-footer">
                     <span class="chat-mode-indicator">
                         <i class="fas fa-circle" style="color:#48bb78;font-size:0.55rem;"></i>
-                        <span id="mode-indicator">AI 在线</span>
+                        <span id="mode-indicator">星伴在线</span>
                         <span id="model-badge" style="background:#e8eaff;color:#5c6bcc;border-radius:4px;padding:1px 6px;font-size:0.7rem;margin-left:4px;cursor:pointer;" title="点击切换模型">🌐 DeepSeek</span>
                     </span>
                     <span class="char-count">
@@ -141,28 +141,28 @@
                 <h3><i class="fas fa-star"></i> 使用帮助</h3>
                 
                 <div class="help-section">
-                    <h4>💬 两种对话模式</h4>
-                    <ul>
-                        <li><i class="fas fa-heart"></i> <strong>陪伴对话</strong> — 模拟TA的聊天风格，给你熟悉的陪伴感</li>
-                        <li><i class="fas fa-hands-helping"></i> <strong>情感咨询</strong> — 基于人格特征分析情感问题，提供疗愈建议</li>
-                    </ul>
+                    <h4>🌟 星伴</h4>
+                    <p>让那个人"活"在对话里。输入TA的星座、MBTI和信息，AI会模拟TA的说话风格陪你聊天。</p>
+                </div>
+                <div class="help-section">
+                    <h4>🔍 星析</h4>
+                    <p>帮你分析这段关系。基于星座、MBTI和你的描述，分析分手原因、复合可能和行动建议。</p>
                 </div>
 
                 <div class="help-section">
-                    <h4>🎯 使用技巧</h4>
+                    <h4>💡 使用技巧</h4>
                     <ul>
-                        <li><i class="fas fa-user-astronaut"></i> 先创建人格模型效果最好，对话会更贴切</li>
-                        <li><i class="fas fa-comment-dots"></i> 提供聊天记录可让AI学习TA的说话风格</li>
-                        <li><i class="fas fa-exchange-alt"></i> 随时可以切换对话模式</li>
-                        <li><i class="fas fa-eraser"></i> 清除对话不会影响人格模型设置</li>
+                        <li><i class="fas fa-star"></i> 说得越多，AI越像那个人</li>
+                        <li><i class="fas fa-file-alt"></i> 导入聊天记录效果更好</li>
+                        <li><i class="fas fa-exchange-alt"></i> 随时可以在星伴和星析间切换</li>
                     </ul>
                 </div>
 
-                <div class="help-section">
+                <div class="help-section warning">
                     <h4>⚠️ 重要提示</h4>
                     <ul>
-                        <li><i class="fas fa-shield-alt"></i> 所有对话记录存储在本地，不会上传</li>
-                        <li><i class="fas fa-heart-broken"></i> 如有严重情绪问题，请寻求专业心理帮助</li>
+                        <li><i class="fas fa-shield-alt"></i> 所有对话仅存储在你的设备上</li>
+                        <li><i class="fas fa-heart"></i> 数星是情感陪伴工具，非专业心理咨询</li>
                     </ul>
                 </div>
 
@@ -175,7 +175,6 @@
 
     <script src="js/star-effects.js?v=2"></script>
     <script>
-        // chat页面加载流星特效（模式选择页）
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('stars-container');
             if (container && window.StarEffects) {
@@ -184,6 +183,6 @@
         });
     </script>
     <script src="js/personality-data.js"></script>
-    <script src="js/chat.js?v=4"></script>
+    <script src="js/chat.js?v=5"></script>
 </body>
 </html>

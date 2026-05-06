@@ -3,142 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="数星 - 基于星座和MBTI的情感陪伴工具，温暖陪伴，治愈心灵">
+    <meta name="description" content="数星 - 情感陪伴工具，让离开的人还能被看见，让困惑的心能找到方向">
     <meta name="theme-color" content="#7c8aff">
     <title>数星 | 再陪我数次星星</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/components.css?v=3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* 首页专属：状态识别引导页 */
+        .welcome-hero {
+            text-align: center;
+            padding: 48px 20px 32px;
+            animation: fadeInUp 0.8s ease;
+        }
+        .welcome-hero .logo-large {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #7c8aff, #a8b2ff);
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 32px rgba(124,138,255,0.3);
+        }
+        .welcome-hero .logo-large i { font-size: 36px; color: #fff; }
+        .welcome-hero h1 { font-size: 2.2rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+        .welcome-hero .sub { font-size: 1rem; color: var(--text-secondary); margin-bottom: 24px; }
+
+        /* 状态识别卡片 */
+        .state-selector {
+            max-width: 520px; margin: 0 auto 32px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        .state-selector h3 {
+            font-size: 1.1rem; color: var(--text); margin-bottom: 20px;
+            text-align: center; font-weight: 600;
+        }
+        .state-options { display: flex; flex-direction: column; gap: 12px; }
+        .state-option {
+            display: flex; align-items: center; gap: 16px;
+            background: var(--card); border: 2px solid var(--border);
+            border-radius: var(--radius-md); padding: 16px 20px;
+            cursor: pointer; transition: var(--transition);
+            text-align: left;
+        }
+        .state-option:hover {
+            border-color: var(--primary); background: var(--card-hover);
+            transform: translateY(-2px); box-shadow: 0 4px 16px var(--shadow-hover);
+        }
+        .state-option .icon-wrap {
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 20px;
+        }
+        .state-option .icon-wrap.purple { background: #ede9fe; color: #7c3aed; }
+        .state-option .icon-wrap.blue { background: #dbeafe; color: #3b82f6; }
+        .state-option .icon-wrap.orange { background: #fef3c7; color: #d97706; }
+        .state-option .icon-wrap.pink { background: #fce7f3; color: #db2777; }
+        .state-option .info h4 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+        .state-option .info p { font-size: 0.82rem; color: var(--text-secondary); }
+
+        /* 已设置状态提示 */
+        .setup-done-card {
+            max-width: 520px; margin: 0 auto 24px;
+            background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+            border-radius: var(--radius-md); padding: 20px 24px;
+            display: none; align-items: center; gap: 16px;
+            animation: fadeInUp 0.5s ease;
+        }
+        .setup-done-card i { font-size: 28px; color: #7c3aed; }
+        .setup-done-card .info { flex: 1; }
+        .setup-done-card .info p { font-size: 0.9rem; color: var(--text); }
+        .setup-done-card .info strong { color: #7c3aed; }
+        .setup-done-card .btn-sm {
+            padding: 8px 18px; border-radius: var(--radius-full);
+            background: #7c3aed; color: #fff; border: none;
+            font-size: 0.85rem; cursor: pointer; font-weight: 500;
+            transition: var(--transition);
+        }
+        .setup-done-card .btn-sm:hover { background: #6d28d9; transform: translateY(-1px); }
+
+        /* 双功能入口（选择状态后显示） */
+        .dual-entry {
+            max-width: 520px; margin: 0 auto 32px;
+            display: none; animation: fadeInUp 0.6s ease;
+        }
+        .dual-entry .entry-cards { display: flex; flex-direction: column; gap: 16px; }
+        .entry-card {
+            display: flex; align-items: center; gap: 18px;
+            background: var(--card); border: 2px solid var(--border);
+            border-radius: var(--radius-md); padding: 20px 24px;
+            cursor: pointer; transition: var(--transition);
+            text-decoration: none;
+        }
+        .entry-card:hover {
+            border-color: var(--primary); transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-hover);
+        }
+        .entry-card .icon {
+            width: 52px; height: 52px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .entry-card .icon.star { background: linear-gradient(135deg, #ede9fe, #e0e7ff); color: #7c3aed; }
+        .entry-card .icon.analyze { background: linear-gradient(135deg, #dbeafe, #e0f2fe); color: #2563eb; }
+        .entry-card .info { flex: 1; }
+        .entry-card .info h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .entry-card .info p { font-size: 0.85rem; color: var(--text-secondary); }
+        .entry-card .arrow { color: var(--text-muted); font-size: 18px; }
+
+        .dual-entry .hint-text {
+            text-align: center; font-size: 0.82rem; color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        /* 页脚 */
+        .home-footer {
+            text-align: center; padding: 24px 20px 32px;
+            color: var(--text-muted); font-size: 0.8rem;
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+        .home-footer p { margin-bottom: 4px; }
+        .home-footer .links { display: flex; justify-content: center; gap: 20px; margin-top: 12px; }
+        .home-footer .links a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; transition: var(--transition); }
+        .home-footer .links a:hover { color: var(--primary); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .welcome-hero { padding: 32px 16px 24px; }
+            .welcome-hero h1 { font-size: 1.8rem; }
+            .state-option { padding: 14px 16px; }
+            .entry-card { padding: 16px 18px; }
+        }
+    </style>
 </head>
 <body>
     <!-- 星光背景 -->
     <div class="stars-container" id="stars-container"></div>
 
-    <div class="container">
-        <!-- 头部 -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon-wrapper">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>数星</h1>
-                    <span class="subtitle">再陪我数次星星</span>
-                </div>
+    <div class="container" style="max-width: 600px;">
+        <!-- 英雄区 -->
+        <div class="welcome-hero">
+            <div class="logo-large">
+                <i class="fas fa-star"></i>
             </div>
-            <p class="tagline">从星光中寻找温暖，在陪伴里治愈心灵</p>
-        </header>
+            <h1>数星</h1>
+            <p class="sub">让离开的人，还能被看见<br>让困惑的心，能找到方向</p>
 
-        <!-- 欢迎卡片 -->
-        <main class="main-content">
-            <div class="welcome-card">
-                <div class="card-icon">
-                    <i class="fas fa-heart"></i>
+            <!-- 已设置提示 -->
+            <div class="setup-done-card" id="setup-done-card">
+                <i class="fas fa-check-circle"></i>
+                <div class="info">
+                    <p>已设置：<strong id="current-persona-display"></strong></p>
                 </div>
-                <h2>欢迎回到数星</h2>
-                <p class="description">
-                    这里是一个温暖的情感陪伴空间。<br>
-                    我们理解失去的痛苦，也相信星光能照亮前路。
-                </p>
-                
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <div>
-                            <h3>前任风格陪伴</h3>
-                            <p>基于星座和MBTI，模拟熟悉的聊天风格</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-hands-helping"></i>
-                        </div>
-                        <div>
-                            <h3>情感咨询开导</h3>
-                            <p>专业的情感复盘，帮助你理清思绪</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div>
-                            <h3>安全私密空间</h3>
-                            <p>完全匿名，你的故事只属于你</p>
-                        </div>
+                <a href="setup.html" class="btn-sm">重新设置</a>
+            </div>
+        </div>
+
+        <!-- ===== 状态识别 ===== -->
+        <div class="state-selector" id="state-selector">
+            <h3>✨ 你现在的状态是？</h3>
+            <div class="state-options">
+                <div class="state-option" data-state="separation">
+                    <div class="icon-wrap purple"><i class="fas fa-heart"></i></div>
+                    <div class="info">
+                        <h4>我刚结束一段感情，想她</h4>
+                        <p>需要一个人陪我说说话，听听我的故事</p>
                     </div>
                 </div>
-
-                <!-- 操作按钮 -->
-                <div class="action-buttons" id="main-actions">
-                    <a href="setup.html" class="btn btn-primary" id="setup-btn">
-                        <i class="fas fa-user-astronaut"></i>
-                        <span>创建人格模型</span>
-                    </a>
-                    <a href="chat.html" class="btn btn-secondary" id="start-chat-btn" style="display: none;">
-                        <i class="fas fa-comments"></i>
-                        <span>开始对话</span>
-                    </a>
-                    <button class="btn btn-secondary" id="learnMore">
-                        <i class="fas fa-info-circle"></i>
-                        <span>了解更多</span>
-                    </button>
+                <div class="state-option" data-state="confused">
+                    <div class="icon-wrap blue"><i class="fas fa-search"></i></div>
+                    <div class="info">
+                        <h4>我想搞清楚我们的关系</h4>
+                        <p>想分析为什么会分开，还有没有可能</p>
+                    </div>
                 </div>
-                
-                <!-- 已设置提示 -->
-                <div class="setup-status" id="setup-status" style="display: none;">
-                    <i class="fas fa-check-circle"></i>
-                    <p>
-                        已设置：<strong id="current-persona"></strong>
-                        <a href="setup.html" class="edit-link">修改设置</a>
-                    </p>
+                <div class="state-option" data-state="relationship">
+                    <div class="icon-wrap orange"><i class="fas fa-handshake"></i></div>
+                    <div class="info">
+                        <h4>我们的关系遇到了一些问题</h4>
+                        <p>异地、争吵、变淡…不知道该怎么办</p>
+                    </div>
+                </div>
+                <div class="state-option" data-state="crush">
+                    <div class="icon-wrap pink"><i class="fas fa-sparkles"></i></div>
+                    <div class="info">
+                        <h4>我在暗恋一个人，心里没底</h4>
+                        <p>想分析TA的心意，想知道该怎么做</p>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 使用说明（折叠） -->
-            <div class="instructions" id="instructions" style="display: none;">
-                <h3><i class="fas fa-book-open"></i> 如何使用数星</h3>
-                <ol class="steps">
-                    <li>
-                        <strong>第一步：创建人格模型</strong>
-                        <p>选择TA的星座和MBTI，上传一段聊天记录</p>
-                    </li>
-                    <li>
-                        <strong>第二步：选择对话模式</strong>
-                        <p>陪伴对话 — 像TA一样陪你聊天<br>情感咨询 — 帮你分析情感问题</p>
-                    </li>
-                    <li>
-                        <strong>第三步：开始对话</strong>
-                        <p>与AI进行对话，获得温暖陪伴或专业建议</p>
-                    </li>
-                    <li>
-                        <strong>第四步：情感成长</strong>
-                        <p>在对话中理清思绪，逐步走出情感困境</p>
-                    </li>
-                </ol>
-                
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p><strong>重要提示：</strong>本产品为情感陪伴工具，非专业心理咨询。如情绪持续低落，请寻求专业帮助。</p>
-                </div>
+        <!-- ===== 功能入口（选择状态后显示） ===== -->
+        <div class="dual-entry" id="dual-entry">
+            <div class="entry-cards">
+                <a class="entry-card" id="entry-star" href="setup.html">
+                    <div class="icon star"><i class="fas fa-star"></i></div>
+                    <div class="info">
+                        <h3>🌟 星伴</h3>
+                        <p id="entry-star-desc">像TA一样陪我说说话</p>
+                    </div>
+                    <div class="arrow"><i class="fas fa-chevron-right"></i></div>
+                </a>
+                <a class="entry-card" id="entry-analyze" href="setup.html">
+                    <div class="icon analyze"><i class="fas fa-chart-simple"></i></div>
+                    <div class="info">
+                        <h3>🔍 星析</h3>
+                        <p id="entry-analyze-desc">帮我分析这段关系</p>
+                    </div>
+                    <div class="arrow"><i class="fas fa-chevron-right"></i></div>
+                </a>
             </div>
-        </main>
+            <p class="hint-text">先设置人格信息，就可以开始啦 ✨</p>
+        </div>
+
+        <!-- 免责声明 -->
+        <div style="max-width:520px;margin:0 auto 16px;padding:12px 18px;background:rgba(255,182,100,0.08);border-radius:12px;text-align:center;display:none;" id="disclaimer-bar">
+            <p style="font-size:0.78rem;color:var(--text-secondary);">
+                <i class="fas fa-exclamation-triangle" style="color:#d97706;margin-right:6px;"></i>
+                数星是情感陪伴工具，非专业心理咨询。如情绪持续低落，请寻求专业帮助。
+            </p>
+        </div>
 
         <!-- 页脚 -->
-        <footer class="footer">
-            <p>© 2026 数星 · 源于真实情感，创造温暖价值</p>
-            <p class="inspiration">送给每一个在星光下寻找方向的人</p>
-            <div class="footer-links">
-                <a href="setup.html" class="footer-link"><i class="fas fa-user-astronaut"></i> 创建模型</a>
-                <a href="analysis.html" class="footer-link"><i class="fas fa-lightbulb"></i> 人格洞察</a>
-                <a href="chat.html" class="footer-link"><i class="fas fa-comments"></i> 开始对话</a>
+        <div class="home-footer">
+            <p>© 2026 数星 · 送给每一个在星光下寻找方向的人</p>
+            <div class="links">
+                <a href="#" id="settings-link"><i class="fas fa-cog"></i> 设置</a>
             </div>
-        </footer>
+        </div>
     </div>
 
-    <script src="js/main.js"></script>
+    <script src="js/main.js?20260506"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 状态识别交互
+        const stateOptions = document.querySelectorAll('.state-option');
+        const dualEntry = document.getElementById('dual-entry');
+        const stateSelector = document.getElementById('state-selector');
+        const disclaimer = document.getElementById('disclaimer-bar');
+
+        // 检查是否已设置
+        let hasSetup = false;
+        try {
+            const saved = localStorage.getItem('shuxing_user_settings');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.zodiac && data.mbti) {
+                    hasSetup = true;
+                    const zodiacNames = {'白羊':'白羊座','金牛':'金牛座','双子':'双子座','巨蟹':'巨蟹座','狮子':'狮子座','处女':'处女座','天秤':'天秤座','天蝎':'天蝎座','射手':'射手座','摩羯':'摩羯座','水瓶':'水瓶座','双鱼':'双鱼座'};
+                    document.getElementById('current-persona-display').textContent = (zodiacNames[data.zodiac]||data.zodiac) + ' · ' + (data.mbti||'');
+                    document.getElementById('setup-done-card').style.display = 'flex';
+                }
+            }
+        } catch(e) {}
+
+        stateOptions.forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                const state = this.dataset.state;
+                const descStar = document.getElementById('entry-star-desc');
+                const descAnalyze = document.getElementById('entry-analyze-desc');
+
+                // 根据用户状态调整功能描述
+                if (state === 'separation') {
+                    descStar.textContent = '想再和她说说话，用她的方式陪我聊聊天';
+                    descAnalyze.textContent = '帮我分析我们为什么会走到这一步';
+                } else if (state === 'confused') {
+                    descStar.textContent = '偶尔也想再听听她的声音';
+                    descAnalyze.textContent = '帮我搞清楚问题出在哪里，还有机会吗';
+                } else if (state === 'relationship') {
+                    descStar.textContent = '想有人理解我的处境和感受';
+                    descAnalyze.textContent = '帮我们做一次关系诊断';
+                } else if (state === 'crush') {
+                    descStar.textContent = '想预演一下和TA聊天的感觉';
+                    descAnalyze.textContent = '帮我看懂TA的心意和信号';
+                }
+
+                // 存储用户状态
+                localStorage.setItem('shuxing_user_state', state);
+
+                // 更新链接
+                if (hasSetup) {
+                    document.getElementById('entry-star').href = 'chat.html?mode=star';
+                    document.getElementById('entry-analyze').href = 'chat.html?mode=analyze';
+                    document.getElementById('entry-star').querySelector('.info h3').textContent = '🌟 星伴 · 开始对话';
+                    document.getElementById('entry-analyze').querySelector('.info h3').textContent = '🔍 星析 · 开始分析';
+                }
+
+                // 显示功能入口
+                stateOptions.forEach(function(o) { o.style.borderColor = 'var(--border)'; });
+                this.style.borderColor = 'var(--primary)';
+                dualEntry.style.display = 'block';
+                dualEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                disclaimer.style.display = 'block';
+            });
+        });
+    });
+    </script>
 </body>
 </html>

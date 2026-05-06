@@ -327,15 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateModeDisplay() {
-        if (modeIcon) modeIcon.className = currentMode === 'companion' ? 'fas fa-heart' : 'fas fa-hands-helping';
-        if (modeTitle) modeTitle.textContent = currentMode === 'companion' ? '陪伴对话' : '情感咨询';
-        if (modeIndicator) modeIndicator.textContent = currentMode === 'companion' ? '陪伴模式' : '咨询模式';
+        if (modeIcon) modeIcon.className = currentMode === 'companion' ? 'fas fa-star' : 'fas fa-compass';
+        if (modeTitle) modeTitle.textContent = currentMode === 'companion' ? '🌟 星伴' : '🔍 星析';
+        if (modeIndicator) modeIndicator.textContent = currentMode === 'companion' ? '星伴模式' : '星析模式';
         if (switchBtn) switchBtn.innerHTML = currentMode === 'companion' 
-            ? '<i class="fas fa-exchange-alt"></i> 切换到咨询模式'
-            : '<i class="fas fa-exchange-alt"></i> 切换到陪伴模式';
-        if (personaInfo && userSettings.zodiac && userSettings.mbti) {
-            const zd = PERSONALITY.zodiac[userSettings.zodiac];
-            personaInfo.textContent = `基于 ${zd?.name || userSettings.zodiac} · ${userSettings.mbti}`;
+            ? '<i class="fas fa-exchange-alt"></i> 切换到星析模式'
+            : '<i class="fas fa-exchange-alt"></i> 切换到星伴模式';
+        if (personaInfo) {
+            if (userSettings.zodiac && userSettings.mbti) {
+                const zd = PERSONALITY.zodiac[userSettings.zodiac];
+                personaInfo.textContent = `基于 ${zd?.name || userSettings.zodiac} · ${userSettings.mbti}`;
+            } else {
+                personaInfo.textContent = currentMode === 'companion' 
+                    ? '让那个人"活"在对话里'
+                    : '帮你分析这段关系，给建议和方向';
+            }
         }
         updatePlaceholder();
     }
@@ -354,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cachedSystemPrompt = '';
         updateModeDisplay();
         updateDynamicQuickReplies();
-        addSystemMessage(`已切换到${currentMode === 'companion' ? '陪伴对话' : '情感咨询'}模式 💫`);
+        addSystemMessage(`已切换到${currentMode === 'companion' ? '🌟 星伴' : '🔍 星析'}模式 💫`);
     }
     
     // ===== System Prompt V3（精简版，减少token） =====
@@ -428,6 +434,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         isWaiting = true;
         if (sendBtn) sendBtn.disabled = true;
+        
+        // ===== 安全检测 =====
+        // 高危关键词检测
+        if (SAFETY.checkCrisis(text)) {
+            isWaiting = false;
+            if (sendBtn) sendBtn.disabled = false;
+            addBotMessage(SAFETY.crisisReply, currentMode);
+            return;
+        }
+        
+        // 1000轮温暖提示
+        const roundTip = SAFETY.checkRoundLimit();
+        if (roundTip) {
+            addBotMessage(roundTip, currentMode);
+            addSystemMessage('💫 旅程还在继续，我依然在这里');
+        }
         
         // 提前创建bot消息气泡（流式输出直接填充到这里）
         const streamBubble = document.createElement('div');
