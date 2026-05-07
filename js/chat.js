@@ -934,7 +934,9 @@ function updateModelProgressBar() {
         let dots = 0;
         const dotTimer = setInterval(() => {
             dots = (dots + 1) % 4;
-            loadingEl.textContent = '思考中' + '.'.repeat(dots);
+            loadingEl.innerHTML = '<span style="animation:starPulse 1s ease-in-out infinite">⭐</span>' + 
+                        '<span style="animation:starPulse 1s ease-in-out 0.2s infinite;display:inline-block">⭐</span>' +
+                        '<span style="animation:starPulse 1s ease-in-out 0.4s infinite;display:inline-block">⭐</span>';
         }, 500);
         
         let reply = null;
