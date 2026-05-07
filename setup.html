@@ -124,6 +124,30 @@
                     <h2><i class="fas fa-comment-dots"></i> 再多说说她（可选）</h2>
                     <p class="section-description">告诉我更多关于她的信息，我可以学得更像～</p>
                     
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+                            <i class="fas fa-user"></i> 她叫什么名字？（或你的称呼）
+                        </label>
+                        <input type="text" id="input-nickname" placeholder="比如：小雨、她、前女友..." 
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+                            <i class="fas fa-handshake"></i> 你们是怎么认识的？
+                        </label>
+                        <input type="text" id="input-background" placeholder="比如：大学同学、朋友介绍、抖音认识的..." 
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+                            <i class="fas fa-smile"></i> 她平时喜欢做什么？
+                        </label>
+                        <input type="text" id="input-interests" placeholder="比如：打游戏、听音乐、看书、逛街..." 
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                    </div>
+                    
                     <div style="margin-bottom:16px;">
                         <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
                             <i class="fas fa-file-alt"></i> 导入聊天记录
@@ -186,6 +210,10 @@
                             <span class="label"><i class="fas fa-brain" style="color:var(--accent);margin-right:6px;"></i>MBTI</span>
                             <span class="value" id="summary-mbti">未选择</span>
                         </div>
+                        <div class="summary-item" id="nickname-summary-item">
+                            <span class="label"><i class="fas fa-user" style="color:var(--primary);margin-right:6px;"></i>称呼</span>
+                            <span class="value" id="summary-nickname">未填写</span>
+                        </div>
                         <div class="summary-item">
                             <span class="label"><i class="fas fa-comment-dots" style="color:var(--secondary);margin-right:6px;"></i>聊天记录</span>
                             <span class="value" id="summary-chat">未提供（后面慢慢告诉我也行）</span>
@@ -233,6 +261,8 @@
         });
     </script>
     <script src="js/personality-data.js"></script>
+    <script src="js/character-model.js"></script>
+    <script src="js/safety.js"></script>
     <script src="js/setup.js"></script>
 </body>
 </html>

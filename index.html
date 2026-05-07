@@ -217,7 +217,7 @@
                     <div class="arrow"><i class="fas fa-chevron-right"></i></div>
                 </a>
             </div>
-            <p class="hint-text">先设置人格信息，就可以开始啦 ✨</p>
+            <p class="hint-text" id="hint-text">先设置人格信息，就可以开始啦 ✨</p>
         </div>
 
         <!-- 免责声明 -->
@@ -291,6 +291,7 @@
                     document.getElementById('entry-analyze').href = 'chat.html?mode=analyze';
                     document.getElementById('entry-star').querySelector('.info h3').textContent = '🌟 星伴 · 开始对话';
                     document.getElementById('entry-analyze').querySelector('.info h3').textContent = '🔍 星析 · 开始分析';
+                    document.getElementById('hint-text').textContent = '现在就可以开始啦 ✨';
                 }
 
                 // 显示功能入口

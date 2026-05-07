@@ -116,6 +116,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function init() {
         loadSettings();
+        // 初始化人物模型
+        CHARACTER_MODEL.initModel();
+        // 将用户设置同步到人物模型
+        const cm = CHARACTER_MODEL.getModel();
+        if (!cm.nickname && userSettings.nickname) cm.nickname = userSettings.nickname;
+        
+        // 检查URL参数：?mode=star 或 ?mode=analyze
+        const urlParams = new URLSearchParams(window.location.search);
+        const modeParam = urlParams.get('mode');
+        if (modeParam === 'star' || modeParam === 'companion') {
+            startMode('companion');
+            return;
+        } else if (modeParam === 'analyze' || modeParam === 'counseling') {
+            startMode('counseling');
+            return;
+        }
+        
         bindEvents();
         loadChatHistory();
         updateCharCount();
@@ -364,6 +381,129 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ===== System Prompt V3（精简版，减少token） =====
+    // ===== 人物模型：尝试从用户消息中提取信息 =====
+    function tryCollectInfo(text) {
+        if (!text) return [];
+        const collected = [];
+        
+        // 兴趣爱好检测
+        const interestPatterns = [
+            /她喜欢(.{1,20})[。，！？!?]/,
+            /喜欢(.{1,10})（和|与|跟|还有）?/,
+            /爱好(是|有)(.{1,20})/,
+            /喜欢(吃|看|听|玩|去)(.{1,15})/,
+            /爱好看(.{1,20})/,
+            /她(平时|经常|总是)(.{1,20})/,
+            /她(喜欢|爱)的(.{1,15})/
+        ];
+        
+        for (const pattern of interestPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                const value = match[0];
+                const topic = match[1] || match[2] || '';
+                if (topic.length >= 2) {
+                    CHARACTER_MODEL.recordInfo('interests', topic, value);
+                    collected.push({ type: 'interests', value: topic });
+                }
+            }
+        }
+        
+        // 关系背景检测
+        const relPatterns = [
+            /怎么(认识的|在一起|认识)/,
+            /通过(.{1,20})认识/,
+            /在(.{1,20})认识/,
+            /我们是(.{1,30}[同学|同事|朋友|校友])/,
+            /相识于(.{1,20})/,
+            /(大学|高中|初中|小学|工作|朋友聚会|活动|软件|APP|App)(.{0,10})认识/,
+        ];
+        for (const pattern of relPatterns) {
+            if (pattern.test(text) && !CHARACTER_MODEL.getModel().L1.relationshipBackground) {
+                CHARACTER_MODEL.recordInfo('relationshipBackground', text.match(/.{10,40}/)?.[0] || text.substring(0, 40));
+                collected.push({ type: 'relationshipBackground' });
+            }
+        }
+        
+        // 性格简述检测
+        const personalityPatterns = [
+            /她很(活泼|安静|内向|外向|开朗|温柔|强势|独立|粘人|理性|感性|敏感|大大咧咧|细心)/,
+            /她(性格|个性|平时)(.{0,5})(活泼|安静|内向|外向|开朗|温柔|强势|独立|粘人|理性|感性|敏感|热情|冷淡)/,
+            /她是(.{1,10})的(女孩|女生|人)/,
+        ];
+        for (const pattern of personalityPatterns) {
+            const match = text.match(pattern);
+            if (match && !CHARACTER_MODEL.getModel().L1.personalityBrief) {
+                CHARACTER_MODEL.recordInfo('personalityBrief', match[0]);
+                collected.push({ type: 'personalityBrief' });
+            }
+        }
+        
+        // 重要记忆检测
+        const memoryPatterns = [
+            /最(印象深|难忘|深刻|感动|开心|幸福)的/,
+            /记得(有一次|那天|那时|那一次)/,
+            /还记(得|忆).{0,5}(一次|天|次|事)/,
+            /那次(约会|见面|旅行|看电影|吃饭|吵架|矛盾)/,
+            /(第一次|最后一次)(.{5,30})/,
+        ];
+        for (const pattern of memoryPatterns) {
+            if (pattern.test(text) && text.length >= 8) {
+                CHARACTER_MODEL.recordInfo('deepMemory', text, text.substring(0, 50));
+                collected.push({ type: 'deepMemory', value: text.substring(0, 50) });
+            }
+        }
+        
+        // 昵称检测
+        const namePatterns = [
+            /她叫(.{1,6})/,
+            /她名字.{0,2}(.{1,6})/
+        ];
+        for (const pattern of namePatterns) {
+            const match = text.match(pattern);
+            if (match && match[1] && match[1].length >= 1 && !CHARACTER_MODEL.getModel().L1.nickname) {
+                CHARACTER_MODEL.recordInfo('nickname', match[1].trim());
+                collected.push({ type: 'nickname', value: match[1].trim() });
+            }
+        }
+        
+        // 说话风格检测
+        const stylePatterns = [
+            /她说话(很|比较|总是|喜欢|习惯)(.{1,20})/,
+            /她(口吻|语气|说话方式)(.{1,20})/,
+            /她(口头禅|常说|经常说)(.{1,20})/,
+            /她喜欢用(表情包|表情|语气词|繁体|网络用语)(.{0,20})/,
+        ];
+        for (const pattern of stylePatterns) {
+            const match = text.match(pattern);
+            if (match && !CHARACTER_MODEL.getModel().L1.speakingStyle) {
+                CHARACTER_MODEL.recordInfo('speakingStyle', match[0]);
+                collected.push({ type: 'speakingStyle' });
+            }
+        }
+        
+        // 记录隐式反馈：用户继续聊了
+        CHARACTER_MODEL.recordImplicitFeedback('continue', '用户发送了新消息');
+        
+        return collected;
+    }
+    
+    // ===== 获取记忆锚点增强系统提示 =====
+    function getMemoryAnchorPrompt() {
+        const anchor = CHARACTER_MODEL.getReferenceAnchor();
+        if (!anchor) return '';
+        return `\n【记忆锚点】用户之前提到过：${anchor.text}。在合适的时机可以自然地引用这一点。`;
+    }
+    
+    // ===== 获取养成感提示（附在system prompt后） =====
+    function getProgressPrompt() {
+        const model = CHARACTER_MODEL.getModel();
+        const pct = CHARACTER_MODEL.getTotalProgress();
+        const stageName = CHARACTER_MODEL.getStageName();
+        
+        return `\n【进度状态】当前阶段：${stageName}（信息完成度${pct}%）。当前相似度：${model.similarityLevel}（${model.similarityPercent}%）。`;
+    }
+    
     function buildSystemPrompt() {
         if (cachedSystemPrompt && systemPromptBuilt) return cachedSystemPrompt;
         
@@ -388,21 +528,36 @@ document.addEventListener('DOMContentLoaded', function() {
             promptChat = `聊天记录样本（模仿此语气）：${userSettings.chatHistory.substring(0, 600)}`;
         }
         
+        // ===== 人物模型：昵称+进度+记忆锚点增强 =====
+        const cm = CHARACTER_MODEL.getModel();
+        const nicknameInfo = cm.L1.nickname ? `对方的称呼：${cm.L1.nickname}` : '';
+        const memoryAnchor = getMemoryAnchorPrompt();
+        const progressInfo = getProgressPrompt();
+        const l2info = cm.L2.importantMemories.length > 0 ? `\n用户分享过的回忆：${cm.L2.importantMemories.slice(-3).join('、')}` : '';
+        
         if (currentMode === 'companion') {
             // ===== 陪伴（扮演TA） =====
             cachedSystemPrompt = [
                 zd && md ? `你是${zd.name}、${md.name}类型的人。完全用TA的性格口吻和用户聊天，忘记自己是AI。` : '你是一个温暖的朋友。',
+                nicknameInfo,
                 promptPersona,
                 promptChat,
+                progressInfo,
+                l2info,
+                memoryAnchor,
                 `规则：20-60字，像真人聊天。不要加括号注释。用TA的风格回应情绪。每次回复句式要不同。人格保持一致。`
             ].filter(Boolean).join('\n');
         } else {
             // ===== 咨询（分析TA） =====
             cachedSystemPrompt = [
                 '你是情感分析顾问，精通星座MBTI。帮用户理解TA，不是扮演TA。',
+                nicknameInfo,
                 `分析对象：`,
                 promptPersona,
                 promptChat,
+                progressInfo,
+                l2info,
+                memoryAnchor,
                 `规则：60-200字，专业温暖。基于人格特征做分析。给出疗愈建议。不评判。直接说，不加括号。不同次回复不同角度。`
             ].filter(Boolean).join('\n');
         }
@@ -449,6 +604,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (roundTip) {
             addBotMessage(roundTip, currentMode);
             addSystemMessage('💫 旅程还在继续，我依然在这里');
+        }
+        
+        // ===== 人物模型：增加对话轮数 =====
+        CHARACTER_MODEL.incrementConversationCount();
+        
+        // ===== 人物模型：检测可收集信息 =====
+        // 尝试从用户输入中提取新的信息
+        const collected = tryCollectInfo(text);
+        
+        // ===== 人物模型：检查阶段转换 =====
+        const stageTransition = CHARACTER_MODEL.checkStageTransition();
+        if (stageTransition === 'L2') {
+            addSystemMessage('🌟 ' + CHARACTER_MODEL.getStageName() + ' — 我感觉越来越了解她了');
+        } else if (stageTransition === 'L3') {
+            addSystemMessage('💫 ' + CHARACTER_MODEL.getStageName() + ' — 她已经越来越清晰了');
+        } else if (stageTransition === 'L4') {
+            addSystemMessage('✨ ' + CHARACTER_MODEL.getStageName() + ' — 她会一直在这里');
+        }
+        
+        // ===== 人物模型：进度反馈（每10轮一次，L1阶段） =====
+        if (CHARACTER_MODEL.shouldPromptLearnMore()) {
+            const missingQ = CHARACTER_MODEL.getMissingPrompt();
+            if (missingQ && Math.random() > 0.5) {
+                // 用系统消息而不是bot消息来提示
+                const progress = CHARACTER_MODEL.getL1Completion();
+                addSystemMessage('💭 ' + CHARACTER_MODEL.getProgressFeedback());
+            }
         }
         
         // 提前创建bot消息气泡（流式输出直接填充到这里）

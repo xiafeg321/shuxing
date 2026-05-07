@@ -9,7 +9,7 @@ const PERSONALITY = window.PERSONALITY;
 // ===== 状态管理 =====
 let currentStep = 1;
 const totalSteps = 4;
-let userSelections = { zodiac: null, mbti: null, chatHistory: '' };
+let userSelections = { zodiac: null, mbti: null, chatHistory: '', nickname: '', background: '', interests: '' };
 
 document.addEventListener('DOMContentLoaded', function() {
     init();
@@ -175,6 +175,30 @@ function generateInsight() {
             : '未提供';
     }
     
+    // 显示昵称/背景/兴趣
+    const summaryNickname = document.getElementById('summary-nickname');
+    if (summaryNickname) {
+        summaryNickname.textContent = userSelections.nickname || '未填写（后面慢慢告诉我也行）';
+    }
+    // 更新summary卡片（如果没有单独的，可以添加一个提示）
+    if (userSelections.background || userSelections.interests) {
+        const extraInfo = [];
+        if (userSelections.background) extraInfo.push('认识方式：' + userSelections.background);
+        if (userSelections.interests) extraInfo.push('爱好：' + userSelections.interests);
+        // 尝试找到或创建一个展示区域
+        const insightCard = document.getElementById('insight-card');
+        if (insightCard) {
+            let extraEl = document.getElementById('extra-info-summary');
+            if (!extraEl) {
+                extraEl = document.createElement('p');
+                extraEl.id = 'extra-info-summary';
+                extraEl.style.cssText = 'color:var(--text-secondary);font-size:0.85rem;line-height:1.8;margin:8px 0 0;';
+                insightCard.appendChild(extraEl);
+            }
+            extraEl.textContent = extraInfo.join(' | ');
+        }
+    }
+    
     // 生成人格洞察
     if (userSelections.zodiac && userSelections.mbti && insightEl) {
         const insight = PERSONALITY.getCombinationInsight(userSelections.zodiac, userSelections.mbti);
@@ -192,6 +216,9 @@ function completeSetup() {
         modelId: 'model_' + Date.now(),
         zodiac: userSelections.zodiac,
         mbti: userSelections.mbti,
+        nickname: userSelections.nickname || '',
+        background: userSelections.background || '',
+        interests: userSelections.interests || '',
         chatHistory: userSelections.chatHistory || '',
         createdAt: new Date().toISOString()
     };
@@ -200,6 +227,21 @@ function completeSetup() {
         // 保存当前模型
         localStorage.setItem('shuxing_user_settings', JSON.stringify(userSelections));
         localStorage.setItem('shuxing_current_model', JSON.stringify(model));
+        
+        // 初始化人物模型，同步用户设置到character model
+        if (window.CHARACTER_MODEL) {
+            CHARACTER_MODEL.initModel();
+            const cm = CHARACTER_MODEL.getModel();
+            if (userSelections.nickname) {
+                CHARACTER_MODEL.recordInfo('nickname', userSelections.nickname);
+            }
+            if (userSelections.background) {
+                CHARACTER_MODEL.recordInfo('relationshipBackground', userSelections.background);
+            }
+            if (userSelections.interests) {
+                CHARACTER_MODEL.recordInfo('interests', userSelections.interests);
+            }
+        }
         
         // 保存到历史记录
         let history = JSON.parse(localStorage.getItem('shuxing_model_history') || '[]');
@@ -251,6 +293,20 @@ function loadSavedData() {
                 if (ta) ta.value = userSelections.chatHistory;
                 updateChatCharCount();
             }
+            
+            // 恢复昵称/背景/兴趣
+            if (userSelections.nickname) {
+                const el = document.getElementById('input-nickname');
+                if (el) el.value = userSelections.nickname;
+            }
+            if (userSelections.background) {
+                const el = document.getElementById('input-background');
+                if (el) el.value = userSelections.background;
+            }
+            if (userSelections.interests) {
+                const el = document.getElementById('input-interests');
+                if (el) el.value = userSelections.interests;
+            }
         }
     } catch (e) {
         console.error('加载数据失败:', e);
@@ -291,6 +347,29 @@ function bindEvents() {
             userSelections.chatHistory = this.value;
             saveToLocalStorage();
             updateChatCharCount();
+        });
+    }
+    
+    // 新字段：昵称、背景、兴趣
+    const nicknameInput = document.getElementById('input-nickname');
+    if (nicknameInput) {
+        nicknameInput.addEventListener('input', function() {
+            userSelections.nickname = this.value;
+            saveToLocalStorage();
+        });
+    }
+    const bgInput = document.getElementById('input-background');
+    if (bgInput) {
+        bgInput.addEventListener('input', function() {
+            userSelections.background = this.value;
+            saveToLocalStorage();
+        });
+    }
+    const interestInput = document.getElementById('input-interests');
+    if (interestInput) {
+        interestInput.addEventListener('input', function() {
+            userSelections.interests = this.value;
+            saveToLocalStorage();
         });
     }
     
