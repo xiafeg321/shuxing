@@ -78,10 +78,14 @@
                         <div class="step-label">MBTI</div>
                     </div>
                     <div class="progress-step" data-step="3">
+                        <div class="step-number">👤</div>
+                        <div class="step-label">你的信息</div>
+                    </div>
+                    <div class="progress-step" data-step="4">
                         <div class="step-number">3</div>
                         <div class="step-label">了解更多</div>
                     </div>
-                    <div class="progress-step" data-step="4">
+                    <div class="progress-step" data-step="5">
                         <div class="step-number">✨</div>
                         <div class="step-label">完成</div>
                     </div>
@@ -127,8 +131,38 @@
                     </div>
                 </div>
 
-                <!-- 步骤3：了解更多（可选） -->
-                <div class="setup-section" id="step-3" style="display:none;">
+                <!-- 步骤2.5：你的信息 -->
+<div class="setup-section" id="step-2_5" style="display:none;">
+    <h2><i class="fas fa-user"></i> 你的星座和MBTI是？</h2>
+    <p class="section-description">分析关系时，我同时需要了解你～这样才能做性格匹配</p>
+    
+    <div style="margin-bottom:16px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+            <i class="fas fa-star-and-crescent" style="color:var(--primary);"></i> 你的星座
+        </label>
+        <div class="selection-grid" id="my-zodiac-grid"></div>
+    </div>
+    
+    <div style="margin-bottom:16px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
+            <i class="fas fa-brain" style="color:var(--accent);"></i> 你的MBTI（如果知道的话）
+        </label>
+        <div class="selection-grid" id="my-mbti-grid"></div>
+    </div>
+    
+    <div class="step-actions">
+        <button class="btn btn-secondary prev-step" data-prev="2">
+            <i class="fas fa-arrow-left"></i> 上一步
+        </button>
+        <button class="btn btn-primary next-step" data-next="3" style="max-width:none;">
+            下一步
+            <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- 步骤3：了解更多（可选） -->
+                <div class="setup-section" id="step-4" style="display:none;">
                     <h2><i class="fas fa-comment-dots"></i> 再多说说她（可选）</h2>
                     <p class="section-description">告诉我更多关于她的信息，我可以学得更像～</p>
                     

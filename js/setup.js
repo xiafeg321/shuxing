@@ -8,8 +8,8 @@ const PERSONALITY = window.PERSONALITY;
 
 // ===== 状态管理 =====
 let currentStep = 1;
-const totalSteps = 4;
-let userSelections = { zodiac: null, mbti: null, chatHistory: '', nickname: '', background: '', interests: '' };
+const totalSteps = 5;
+let userSelections = { zodiac: null, mbti: null, chatHistory: '', nickname: '', background: '', interests: '', myZodiac: null, myMbti: null };
 
 document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('shuxing_theme');
@@ -22,12 +22,47 @@ document.addEventListener('DOMContentLoaded', function() {
 function init() {
     generateZodiacCards();
     generateMbtiCards();
+    generateMyZodiacCards();
+    generateMyMbtiCards();
     bindEvents();
     loadSavedData();
     updateProgress();
 }
 
 // ===== 生成星座卡片 =====
+function generateMyZodiacCards() {
+    var grid = document.getElementById('my-zodiac-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    Object.entries(PERSONALITY.zodiac).forEach(function(entry) {
+        var key = entry[0], data = entry[1];
+        var card = document.createElement('div');
+        card.className = 'selection-card';
+        card.dataset.value = key;
+        card.dataset.type = 'myZodiac';
+        card.innerHTML = '<span class="symbol">' + data.symbol + '</span><div class="name">' + data.name + '</div><span class="badge">' + data.element + '象星座</span><div class="trait">' + data.trait + '</div>';
+        card.addEventListener('click', function() { selectItem('myZodiac', key, card); });
+        grid.appendChild(card);
+    });
+}
+
+function generateMyMbtiCards() {
+    var grid = document.getElementById('my-mbti-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    var categoryColors = {'分析师': 'category-analyst','外交家': 'category-diplomat','守护者': 'category-sentinel','探险家': 'category-explorer'};
+    Object.entries(PERSONALITY.mbti).forEach(function(entry) {
+        var key = entry[0], data = entry[1];
+        var card = document.createElement('div');
+        card.className = 'selection-card';
+        card.dataset.value = key;
+        card.dataset.type = 'myMbti';
+        card.innerHTML = '<div class="name" style="font-size:1.3rem;letter-spacing:2px;">' + data.name + '</div><span class="badge ' + (categoryColors[data.category] || '') + '">' + data.category + '</span><div class="trait">' + data.trait + '</div>';
+        card.addEventListener('click', function() { selectItem('myMbti', key, card); });
+        grid.appendChild(card);
+    });
+}
+
 function generateZodiacCards() {
     const grid = document.getElementById('zodiac-grid');
     if (!grid) return;
@@ -122,11 +157,11 @@ function goToStep(step) {
     // 校验
     if (step > currentStep) {
         if (currentStep === 1 && !userSelections.zodiac) {
-            showToast('请先选择一个星座', 'error');
+            showToast('请先选择她的星座', 'error');
             return;
         }
         if (currentStep === 2 && !userSelections.mbti) {
-            showToast('请先选择一个MBTI类型', 'error');
+            showToast('请先选择她的MBTI类型', 'error');
             return;
         }
     }
@@ -220,6 +255,8 @@ function completeSetup() {
         modelId: 'model_' + Date.now(),
         zodiac: userSelections.zodiac,
         mbti: userSelections.mbti,
+        myZodiac: userSelections.myZodiac || '',
+        myMbti: userSelections.myMbti || '', 
         nickname: userSelections.nickname || '',
         background: userSelections.background || '',
         interests: userSelections.interests || '',
