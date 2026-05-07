@@ -8,6 +8,73 @@
  *   5. 对话节奏控制
  */
 
+// ===== 用户类型自动识别系统（文档1.5.3节） =====
+// 通过前3-5轮对话自动判断用户属于A/B/C/D哪一类型
+window.autoDetectUserType = {
+    pending: false,
+    rounds: 0,
+    clues: { A: 0, B: 0, C: 0, D: 0 },
+    
+    // 每轮对话调用，分析用户输入
+    analyze: function(text) {
+        if (!this.pending) return null;
+        this.rounds++;
+        if (this.rounds > 5) return null; // 最多分析前5轮
+        
+        // 各类型关键词
+        var clues = {
+            A: ['分手', '离开', '前任', '前女友', '前男友', '刚分', '刚结束', '想她', '想他', '难过', '失恋', '被甩'],
+            B: ['为什么', '原因', '搞不懂', '想不通', '困惑', '分析', '问题在哪', '哪里错了', '怎么回事'],
+            C: ['我们还在', '关系', '异地', '吵架', '变淡', '冷战', '在一起', '修复', '挽救', '改善'],
+            D: ['暗恋', '喜欢', '暧昧', '不确定', '心里没底', '不敢', '同事', '同学', 'crush', '好感']
+        };
+        
+        // 检查匹配
+        for (var type in clues) {
+            for (var i = 0; i < clues[type].length; i++) {
+                if (text.indexOf(clues[type][i]) >= 0) {
+                    this.clues[type]++;
+                    break;
+                }
+            }
+        }
+        
+        // 第3轮或第5轮时判断
+        if (this.rounds === 3 || this.rounds === 5) {
+            var maxType = 'A', maxScore = 0;
+            for (var t in this.clues) {
+                if (this.clues[t] > maxScore) {
+                    maxScore = this.clues[t];
+                    maxType = t;
+                }
+            }
+            
+            if (maxScore >= 2) {
+                var typeNames = { A: 'separation', B: 'confused', C: 'relationship', D: 'crush' };
+                var detectedType = typeNames[maxType];
+                localStorage.setItem('shuxing_user_state', detectedType);
+                this.pending = false;
+                return detectedType;
+            }
+        }
+        
+        // 5轮后还没判断出来，默认A类
+        if (this.rounds >= 5) {
+            localStorage.setItem('shuxing_user_state', 'separation');
+            this.pending = false;
+            return 'separation';
+        }
+        
+        return null;
+    },
+    
+    reset: function() {
+        this.pending = true;
+        this.rounds = 0;
+        this.clues = { A: 0, B: 0, C: 0, D: 0 };
+    }
+};
+
 // ===== 模型调度配置 =====
 // API key统一由 proxy-server.js 管理，前端不存key
 const AI_CONFIG = {
@@ -784,6 +851,13 @@ function updateModelProgressBar() {
         if (roundTip) {
             addBotMessage(roundTip, currentMode);
             addSystemMessage('💫 旅程还在继续，我依然在这里');
+        }
+        
+        // ===== 用户类型自动识别（文档1.5.3节） =====
+        var detectedType = autoDetectUserType.analyze(text);
+        if (detectedType) {
+            var typeNames = { separation: '💔 刚分手', confused: '🔍 困惑期', relationship: '🤝 关系中', crush: '💕 暗恋中' };
+            addSystemMessage('📋 已识别你的状态：' + (typeNames[detectedType] || detectedType) + '，我会根据你的情况提供帮助');
         }
         
         // ===== 信息修正检测 =====
