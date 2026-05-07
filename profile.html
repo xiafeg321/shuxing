@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="个人中心 - 数星情感陪伴">
     <meta name="theme-color" content="#7c8aff">
-    <title>个人中心 | 数星</title>
+    <script>
+(function() {
+    try {
+        var t = localStorage.getItem('shuxing_theme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch(e) {}
+})();
+</script>
+<title>个人中心 | 数星</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -164,6 +172,9 @@
                     <h2>我的数星</h2>
                     <p>管理你的人物模型和数据</p>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <!-- 人物信息 -->
@@ -191,6 +202,9 @@
                     <span class="info-label">认识方式</span>
                     <span class="info-value" id="profile-bg">未填写</span>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <!-- 模型进度 -->
@@ -248,6 +262,9 @@
                         <div class="progress-fill total" id="progress-total" style="width:0%"></div>
                     </div>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <!-- 已收集信息 -->
@@ -258,6 +275,9 @@
                 <div id="profile-info-list">
                     <div class="profile-empty">还没有信息，先去聊天吧～</div>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <!-- 统计数据 -->
@@ -275,6 +295,9 @@
                         <div class="label">消息总数</div>
                     </div>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <!-- 操作 -->
@@ -301,6 +324,9 @@
                         <span>重置人物模型</span>
                     </button>
                 </div>
+                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
+                    <i class="fas fa-moon" id="profile-theme-icon"></i>
+                </button>
             </div>
 
             <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:0.8rem;">
@@ -312,6 +338,26 @@
     <script src="js/star-effects.js"></script>
     <script src="js/personality-data.js"></script>
     <script src="js/character-model.js"></script>
-    <script src="js/profile.js"></script>
+    <script src="js/profile.js">function toggleProfileTheme() {
+    var html = document.documentElement;
+    var icon = document.getElementById('profile-theme-icon');
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        html.removeAttribute('data-theme');
+        icon.className = 'fas fa-moon';
+        localStorage.setItem('shuxing_theme', 'light');
+    } else {
+        html.setAttribute('data-theme', 'dark');
+        icon.className = 'fas fa-sun';
+        localStorage.setItem('shuxing_theme', 'dark');
+    }
+}
+// 恢复主题图标
+(function() {
+    var t = localStorage.getItem('shuxing_theme');
+    var icon = document.getElementById('profile-theme-icon');
+    if (t === 'dark' && icon) icon.className = 'fas fa-sun';
+})();
+</script>
 </body>
 </html>

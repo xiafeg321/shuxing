@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="设置人格模型 - 数星情感陪伴">
     <meta name="theme-color" content="#7c8aff">
-    <title>人格设置 | 数星</title>
+    <script>
+(function() {
+    try {
+        var t = localStorage.getItem('shuxing_theme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch(e) {}
+})();
+</script>
+<title>人格设置 | 数星</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">

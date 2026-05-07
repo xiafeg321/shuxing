@@ -564,7 +564,7 @@ function updateModelProgressBar() {
         return `\n【进度状态】当前阶段：${stageName}（信息完成度${pct}%）。当前相似度：${model.similarityLevel}（${model.similarityPercent}%）。`;
     }
     
-    function buildSystemPrompt() {
+    function buildSystemPrompt(userInput) {
         if (cachedSystemPrompt && systemPromptBuilt) return cachedSystemPrompt;
         
         const hasPersona = userSettings.zodiac && userSettings.mbti;
@@ -610,7 +610,7 @@ function updateModelProgressBar() {
         } else {
             // ===== 咨询（分析TA） =====
             // 使用分析引擎生成结构化分析prompt
-            const analysisPrompt = ANALYSIS_ENGINE.buildAnalysisPrompt('') || {};
+            const analysisPrompt = ANALYSIS_ENGINE.buildAnalysisPrompt(userInput || '') || {};
             
             cachedSystemPrompt = [
                 '你是情感分析顾问，精通星座MBTI。帮用户理解TA，不是扮演TA。',
@@ -823,7 +823,7 @@ function updateModelProgressBar() {
     async function streamAI(userInput, bubbleEl) {
         if (!AI_CONFIG.enabled) return null;
         
-        const systemPrompt = buildSystemPrompt();
+        const systemPrompt = buildSystemPrompt(userInput);
         const contextMsgs = buildContextMessages();
         
         const messages = [

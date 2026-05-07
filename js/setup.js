@@ -12,6 +12,10 @@ const totalSteps = 4;
 let userSelections = { zodiac: null, mbti: null, chatHistory: '', nickname: '', background: '', interests: '' };
 
 document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('shuxing_theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
     init();
 });
 

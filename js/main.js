@@ -4,6 +4,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // 恢复暗色模式偏好（跨页面保持）
+    const savedTheme = localStorage.getItem('shuxing_theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
     initStars();
     initUI();
     checkSetupStatus();

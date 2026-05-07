@@ -138,6 +138,88 @@
             .entry-card { padding: 16px 18px; }
         }
     </style>
+
+<!-- 首次进入引导弹窗 -->
+<div class="welcome-overlay" id="welcome-overlay" style="display:none;">
+    <div class="welcome-modal">
+        <div class="welcome-slides">
+            <div class="welcome-slide active" data-slide="0">
+                <div class="welcome-icon"><i class="fas fa-star"></i></div>
+                <h2>欢迎来到数星 ✨</h2>
+                <p>让离开的人，还能被看见<br>让困惑的心，能找到方向</p>
+            </div>
+            <div class="welcome-slide" data-slide="1">
+                <div class="welcome-icon"><i class="fas fa-heart"></i></div>
+                <h2>🌟 星伴</h2>
+                <p>让那个人"活"在对话里<br>用TA的说话风格陪你聊天</p>
+            </div>
+            <div class="welcome-slide" data-slide="2">
+                <div class="welcome-icon"><i class="fas fa-compass"></i></div>
+                <h2>🔍 星析</h2>
+                <p>帮你分析这段关系<br>看懂发生了什么，找到方向</p>
+            </div>
+        </div>
+        <div class="welcome-dots">
+            <span class="dot active" data-slide="0"></span>
+            <span class="dot" data-slide="1"></span>
+            <span class="dot" data-slide="2"></span>
+        </div>
+        <button class="welcome-btn" id="welcome-next">下一步 <i class="fas fa-arrow-right"></i></button>
+        <button class="welcome-skip" id="welcome-skip">跳过</button>
+    </div>
+</div>
+
+<style>
+.welcome-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(30, 30, 60, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000; display: flex;
+    align-items: center; justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+.welcome-modal {
+    background: var(--card); border-radius: var(--radius-lg);
+    padding: 40px 28px 28px; max-width: 360px; width: 90%;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.welcome-slides { min-height: 200px; position: relative; }
+.welcome-slide {
+    display: none; animation: fadeSlideUp 0.4s ease;
+}
+.welcome-slide.active { display: block; }
+.welcome-icon {
+    font-size: 48px; color: var(--primary); margin-bottom: 20px;
+    width: 80px; height: 80px; line-height: 80px;
+    background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+    border-radius: 24px; margin: 0 auto 20px;
+}
+.welcome-slide h2 { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.welcome-slide p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; }
+.welcome-dots { display: flex; justify-content: center; gap: 8px; margin: 24px 0; }
+.welcome-dots .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); transition: var(--transition); cursor: pointer;
+}
+.welcome-dots .dot.active { width: 24px; border-radius: 4px; background: var(--primary); }
+.welcome-btn {
+    background: var(--primary); color: #fff; border: none;
+    padding: 12px 32px; border-radius: var(--radius-full);
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: var(--transition); width: 100%;
+}
+.welcome-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+.welcome-skip {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 0.85rem; cursor: pointer; margin-top: 12px;
+    transition: var(--transition);
+}
+.welcome-skip:hover { color: var(--text-secondary); }
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 </head>
 <body>
     <!-- 星光背景 -->
@@ -304,5 +386,60 @@
         });
     });
     </script>
+
+<script>
+// 首次进入引导
+(function() {
+    const hasSeenWelcome = localStorage.getItem('shuxing_welcome_seen');
+    if (!hasSeenWelcome) {
+        const overlay = document.getElementById('welcome-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+    
+    // 欢迎引导交互
+    const btn = document.getElementById('welcome-next');
+    const skipBtn = document.getElementById('welcome-skip');
+    const slides = document.querySelectorAll('.welcome-slide');
+    const dots = document.querySelectorAll('.dot');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function goToSlide(idx) {
+        slides.forEach(s => s.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        slides[idx].classList.add('active');
+        dots[idx].classList.add('active');
+        currentSlide = idx;
+        
+        if (idx === totalSlides - 1) {
+            btn.innerHTML = '开始使用 ✨ <i class="fas fa-star"></i>';
+        } else {
+            btn.innerHTML = '下一步 <i class="fas fa-arrow-right"></i>';
+        }
+    }
+    
+    dots.forEach(dot => {
+        dot.addEventListener('click', () => goToSlide(parseInt(dot.dataset.slide)));
+    });
+    
+    if (btn) {
+        btn.addEventListener('click', function() {
+            if (currentSlide < totalSlides - 1) {
+                goToSlide(currentSlide + 1);
+            } else {
+                localStorage.setItem('shuxing_welcome_seen', 'true');
+                document.getElementById('welcome-overlay').style.display = 'none';
+            }
+        });
+    }
+    
+    if (skipBtn) {
+        skipBtn.addEventListener('click', function() {
+            localStorage.setItem('shuxing_welcome_seen', 'true');
+            document.getElementById('welcome-overlay').style.display = 'none';
+        });
+    }
+})();
+</script>
 </body>
 </html>
