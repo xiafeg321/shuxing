@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数星 · 测试面板</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0a1628; color: #e0e0ee; font-family: 'Noto Sans SC', sans-serif; padding: 20px; }
+        .test-header { max-width: 800px; margin: 0 auto 24px; text-align: center; }
+        .test-header h1 { font-size: 1.6rem; font-weight: 700; color: #8b7eff; margin-bottom: 8px; }
+        .test-header p { color: #6a7298; font-size: 0.9rem; }
+        
+        .test-controls { max-width: 800px; margin: 0 auto 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .test-btn {
+            padding: 10px 24px; border: 1px solid rgba(139, 126, 255, 0.3); border-radius: 12px;
+            background: rgba(255,255,255,0.06); color: #c0c8e0; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px);
+        }
+        .test-btn:hover { background: rgba(139,126,255,0.15); border-color: #8b7eff; }
+        .test-btn.primary { background: #8b7eff; color: #fff; border-color: #8b7eff; }
+        .test-btn.primary:hover { background: #7a6df0; }
+        
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .test-category { margin-bottom: 16px; }
+        .category-header {
+            padding: 12px 18px; border-radius: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .category-header:hover { background: rgba(255,255,255,0.08); }
+        .category-title { font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        .category-stats { font-size: 0.8rem; color: #6a7298; display: flex; gap: 12px; align-items: center; }
+        .category-stats .pass { color: #48bb78; }
+        .category-stats .fail { color: #f56565; }
+        
+        .test-items { display: none; padding: 8px 0 8px 20px; }
+        .test-items.expanded { display: block; }
+        .test-item {
+            padding: 6px 12px; display: flex; justify-content: space-between;
+            align-items: center; font-size: 0.85rem; border-radius: 8px; margin-bottom: 2px;
+        }
+        .test-item:hover { background: rgba(255,255,255,0.03); }
+        .test-item .status { font-weight: 600; }
+        .test-item .status.pass { color: #48bb78; }
+        .test-item .status.fail { color: #f56565; }
+        .test-item .status.skipped { color: #a0aec0; }
+        .test-item .msg { color: #8890b0; font-size: 0.8rem; }
+        
+        .summary-bar {
+            position: sticky; bottom: 0; padding: 16px; border-radius: 16px 16px 0 0;
+            background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: center; gap: 24px; font-size: 0.9rem;
+        }
+        .summary-bar .stat { display: flex; align-items: center; gap: 6px; }
+        .summary-bar .num { font-weight: 700; font-size: 1.2rem; }
+        .summary-bar .num.total { color: #8b7eff; }
+        .summary-bar .num.pass { color: #48bb78; }
+        .summary-bar .num.fail { color: #f56565; }
+        
+        .test-msg { max-width: 800px; margin: 16px auto 0; padding: 12px 18px; border-radius: 12px; font-size: 0.85rem; display: none; }
+        .test-msg.info { display: block; background: rgba(139, 126, 255, 0.1); border: 1px solid rgba(139, 126, 255, 0.2); color: #a99bff; }
+        .test-msg.warn { display: block; background: rgba(245, 101, 101, 0.1); border: 1px solid rgba(245, 101, 101, 0.2); color: #f56565; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid #8b7eff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🧪 数星测试面板</h1>
+        <p>每次迭代后运行全部测试，确保所有功能正常</p>
+    </div>
+    
+    <div class="test-controls">
+        <button class="test-btn primary" onclick="runAllTests()"><i class="fas fa-play"></i> 运行全部测试</button>
+        <button class="test-btn" onclick="toggleAll()"><i class="fas fa-expand"></i> 展开/收起</button>
+        <button class="test-btn" onclick="clearResults()"><i class="fas fa-eraser"></i> 清除结果</button>
+    </div>
+    
+    <div class="test-container" id="test-container"></div>
+    
+    <div class="test-msg" id="test-msg"></div>
+    
+    <div class="summary-bar" id="summary-bar" style="display:none;">
+        <div class="stat"><span>总计</span><span class="num total" id="total-num">0</span></div>
+        <div class="stat"><span>通过</span><span class="num pass" id="pass-num">0</span></div>
+        <div class="stat"><span>失败</span><span class="num fail" id="fail-num">0</span></div>
+    </div>
+    
+    <script src="js/character-model.js"></script>
+    <script src="js/safety.js"></script>
+    <script src="js/analysis-engine.js"></script>
+    <script src="js/model-scheduler.js"></script>
+    <script src="js/personality-data.js"></script>
+    <script src="js/test-framework.js"></script>
+    <script>
+    var categories = [
+        { key: 'Core', label: '⚙️ 核心模块', icon: 'fa-cog' },
+        { key: 'Setup', label: '👤 人格设置', icon: 'fa-user' },
+        { key: 'CharacterModel', label: '🧠 人物模型', icon: 'fa-brain' },
+        { key: 'Chat', label: '💬 对话系统', icon: 'fa-comment' },
+        { key: 'Analysis', label: '🔍 分析引擎', icon: 'fa-chart-simple' },
+        { key: 'Safety', label: '🛡️ 安全伦理', icon: 'fa-shield' },
+        { key: 'Profile', label: '👤 个人中心', icon: 'fa-user-astronaut' },
+        { key: 'Home', label: '🏠 首页', icon: 'fa-home' }
+    ];
+    
+    var allResults = {};
+    
+    function initPanel() {
+        var container = document.getElementById('test-container');
+        container.innerHTML = '';
+        categories.forEach(function(cat) {
+            var tests = SHUXING_TEST[cat.key];
+            if (!tests) return;
+            var testNames = Object.keys(tests).filter(function(k) { return k.startsWith('test'); });
+            
+            var catDiv = document.createElement('div');
+            catDiv.className = 'test-category';
+            catDiv.innerHTML = 
+                '<div class="category-header" onclick="toggleCategory(this)">' +
+                    '<div class="category-title"><i class="fas ' + cat.icon + '" style="color:#8b7eff;"></i> ' + cat.label + '</div>' +
+                    '<div class="category-stats" id="stats-' + cat.key + '">' +
+                        '<span class="pass"><i class="fas fa-check-circle"></i> <span id="pass-' + cat.key + '">0</span>/' + testNames.length + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="test-items" id="items-' + cat.key + '">' +
+                    testNames.map(function(n) {
+                        return '<div class="test-item" id="result-' + cat.key + '-' + n + '">' +
+                            '<span class="msg"><span class="status" id="status-' + cat.key + '-' + n + '">⏳</span> ' + n + '</span>' +
+                            '<span class="msg" id="msg-' + cat.key + '-' + n + '">等待运行</span>' +
+                        '</div>';
+                    }).join('') +
+                '</div>';
+            container.appendChild(catDiv);
+        });
+    }
+    
+    function toggleCategory(el) {
+        var items = el.nextElementSibling;
+        items.classList.toggle('expanded');
+    }
+    
+    function toggleAll() {
+        var expanded = false;
+        document.querySelectorAll('.test-items').forEach(function(el) {
+            el.classList.toggle('expanded');
+            if (el.classList.contains('expanded')) expanded = true;
+        });
+    }
+    
+    function clearResults() {
+        document.querySelectorAll('.test-item').forEach(function(el) {
+            var status = el.querySelector('.status');
+            var msg = el.querySelector('.msg:last-child');
+            status.textContent = '⏳';
+            status.className = 'status';
+            msg.textContent = '等待运行';
+        });
+        document.getElementById('summary-bar').style.display = 'none';
+        var m = document.getElementById('test-msg');
+        m.style.display = 'none';
+        m.className = 'test-msg';
+    }
+    
+    function runAllTests() {
+        clearResults();
+        var msg = document.getElementById('test-msg');
+        msg.innerHTML = '<span class="loading"></span> 正在运行测试...';
+        msg.className = 'test-msg info';
+        msg.style.display = 'block';
+        
+        setTimeout(function() {
+            var results = SHUXING_TEST.runAll();
+            
+            // 更新UI
+            var totalPass = 0, totalFail = 0;
+            
+            categories.forEach(function(cat) {
+                var tests = SHUXING_TEST[cat.key];
+                if (!tests) return;
+                var catPass = 0, catFail = 0;
+                
+                var testNames = Object.keys(tests).filter(function(k) { return k.startsWith('test'); });
+                testNames.forEach(function(name) {
+                    var id = cat.key + '-' + name;
+                    var statusEl = document.getElementById('status-' + id);
+                    var msgEl = document.getElementById('msg-' + id);
+                    
+                    // Find result in console output (or re-run)
+                    try {
+                        var r = tests[name]();
+                        if (r.pass) {
+                            catPass++; totalPass++;
+                            if (statusEl) { statusEl.textContent = '✅'; statusEl.className = 'status pass'; }
+                            if (msgEl) msgEl.textContent = r.msg || '通过';
+                        } else {
+                            catFail++; totalFail++;
+                            if (statusEl) { statusEl.textContent = '❌'; statusEl.className = 'status fail'; }
+                            if (msgEl) msgEl.textContent = r.msg || '失败';
+                        }
+                    } catch(e) {
+                        catFail++; totalFail++;
+                        if (statusEl) { statusEl.textContent = '❌'; statusEl.className = 'status fail'; }
+                        if (msgEl) msgEl.textContent = '异常: ' + e.message;
+                    }
+                });
+                
+                var passEl = document.getElementById('pass-' + cat.key);
+                if (passEl) passEl.textContent = catPass;
+            });
+            
+            // 更新汇总
+            document.getElementById('total-num').textContent = totalPass + totalFail;
+            document.getElementById('pass-num').textContent = totalPass;
+            document.getElementById('fail-num').textContent = totalFail;
+            document.getElementById('summary-bar').style.display = 'flex';
+            
+            var rate = totalPass + totalFail > 0 ? Math.round(totalPass / (totalPass + totalFail) * 100) : 0;
+            if (totalFail === 0) {
+                msg.innerHTML = '🎉 全部 ' + (totalPass + totalFail) + ' 个测试通过！通过率 ' + rate + '%';
+                msg.className = 'test-msg info';
+            } else {
+                msg.innerHTML = '⚠️ ' + totalFail + ' 个测试失败，通过率 ' + rate + '%';
+                msg.className = 'test-msg warn';
+            }
+        }, 200);
+    }
+    
+    initPanel();
+    console.log('🧪 测试面板已加载 — 点击"运行全部测试"开始');
+    </script>
+</body>
+</html>
