@@ -300,6 +300,19 @@
                 </button>
             </div>
 
+            <!-- 设置 -->
+            <div class="profile-section">
+                <div class="profile-section-title">
+                    <i class="fas fa-bell"></i> 消息设置
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" id="toggle-active-msg" onclick="toggleActiveMessage()">
+                        <i class="fas fa-sun" id="active-msg-icon"></i>
+                        <span id="active-msg-text">早安消息：已开启</span>
+                    </button>
+                </div>
+            </div>
+            
             <!-- 操作 -->
             <div class="profile-section">
                 <div class="profile-section-title">
@@ -338,7 +351,35 @@
     <script src="js/star-effects.js"></script>
     <script src="js/personality-data.js"></script>
     <script src="js/character-model.js"></script>
-    <script src="js/profile.js">function toggleProfileTheme() {
+    <script src="js/profile.js">function toggleActiveMessage() {
+    var current = localStorage.getItem('shuxing_active_msg_enabled');
+    var enabled = current !== 'false';
+    var newVal = enabled ? 'false' : 'true';
+    localStorage.setItem('shuxing_active_msg_enabled', newVal);
+    var icon = document.getElementById('active-msg-icon');
+    var text = document.getElementById('active-msg-text');
+    if (newVal === 'true') {
+        icon.className = 'fas fa-sun';
+        text.textContent = '早安消息：已开启';
+        showToast('早安消息已开启 ☀️', 'success');
+    } else {
+        icon.className = 'fas fa-moon';
+        text.textContent = '早安消息：已关闭';
+        showToast('早安消息已关闭 🌙', 'success');
+    }
+}
+// 初始化早安消息状态
+(function() {
+    var enabled = localStorage.getItem('shuxing_active_msg_enabled');
+    var icon = document.getElementById('active-msg-icon');
+    var text = document.getElementById('active-msg-text');
+    if (enabled === 'false') {
+        if (icon) icon.className = 'fas fa-moon';
+        if (text) text.textContent = '早安消息：已关闭';
+    }
+})();
+
+function toggleProfileTheme() {
     var html = document.documentElement;
     var icon = document.getElementById('profile-theme-icon');
     var isDark = html.getAttribute('data-theme') === 'dark';

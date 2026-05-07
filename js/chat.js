@@ -163,6 +163,8 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDynamicQuickReplies();
         // 创建进度条
         createProgressBar();
+        // 每日主动消息（文档8.1节：每天最多1条早安/关心）
+        sendDailyActiveMessage();
         
         if (userSettings.zodiac && userSettings.mbti && modeSelection) {
             const hint = document.createElement('div');
@@ -224,6 +226,34 @@ function updateModelProgressBar() {
     if (text) text.textContent = CHARACTER_MODEL.getStageName() + ' · ' + Math.round(pct/10)*10 + '%';
 }
 
+    // ===== 每日主动消息（文档8.1节MVP验收标准） =====
+    function sendDailyActiveMessage() {
+        try {
+            const now = new Date();
+            const hour = now.getHours();
+            const today = now.toDateString();
+            const lastActive = localStorage.getItem('shuxing_last_active_msg');
+            const activeMsgEnabled = localStorage.getItem('shuxing_active_msg_enabled');
+            if (activeMsgEnabled === 'false') return; // 用户已关闭
+            if (lastActive === today) return; // 今天已发过
+            
+            // 只在早上6-10点发送早安消息
+            if (hour >= 6 && hour <= 10) {
+                localStorage.setItem('shuxing_last_active_msg', today);
+                // 延迟1秒发送，让页面先加载完
+                setTimeout(() => {
+                    const msg = ['早安～ 昨晚睡得好吗？', '早呀～ 今天天气不错，心情怎么样？', 
+                        '早上好☀️ 新的一天开始了，有什么事都可以和我说',
+                        '早安～ 起床了吗？我一直在呢✨',
+                        '早～ 今天的你也要开开心心的哦'];
+                    const pick = msg[Math.floor(Math.random() * msg.length)];
+                    addBotMessage(pick, currentMode);
+                    scrollBottom();
+                }, 1200);
+            }
+        } catch(e) {}
+    }
+    
     function checkSetup() {
         if (!userSettings.zodiac || !userSettings.mbti) {
             const reminder = document.createElement('div');
@@ -710,6 +740,17 @@ function updateModelProgressBar() {
             if (needsRefresh) {
                 cachedSystemPrompt = '';
                 systemPromptBuilt = false;
+            }
+            
+            // 复合评估专项触发（文档3.3.4节）
+            const reconsKeywords = ['复合', '可能吗', '有希望', '还能回到', '还有机会', '和好', '再在一起', '重新开始', '她还爱我吗', '她还会回来吗'];
+            if (reconsKeywords.some(kw => text.includes(kw)) && ANALYSIS_ENGINE) {
+                const reconData = ANALYSIS_ENGINE.buildReconciliationPrompt();
+                // 不需要清除缓存，system prompt已经包含了分析框架
+                // 通过系统消息引导到复合评估
+                if (conversationStarted && Math.random() > 0.6) {
+                    addSystemMessage('💞 复合分析：正在基于你提供的信息评估中...');
+                }
             }
         }
         

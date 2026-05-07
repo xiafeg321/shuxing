@@ -318,6 +318,7 @@ window.ANALYSIS_ENGINE = {
    * 生成分析报告 prompt（让AI根据此结构回复）
    */
   buildAnalysisPrompt: function(userInput) {
+    this._initWeights();
     const model = CHARACTER_MODEL ? CHARACTER_MODEL.getModel() : null;
     const settings = this._loadSettings();
 
@@ -363,11 +364,54 @@ window.ANALYSIS_ENGINE = {
   },
 
   /**
-   * 智能选择分析框架
+   * ===== 框架权重管理系统（文档5.2.2节） =====
+   */
+  _frameworkWeights: null,
+
+  _initWeights: function() {
+    if (this._frameworkWeights) return;
+    try {
+      var saved = localStorage.getItem('shuxing_framework_weights');
+      if (saved) { this._frameworkWeights = JSON.parse(saved); return; }
+    } catch(e) {}
+    this._frameworkWeights = {
+      '星座+MBTI性格匹配分析': { weight: 1.0, uses: 0, pos: 0, neg: 0 },
+      '依恋理论': { weight: 1.0, uses: 0, pos: 0, neg: 0 },
+      '爱情三角理论': { weight: 1.0, uses: 0, pos: 0, neg: 0 },
+      '爱的五种语言': { weight: 1.0, uses: 0, pos: 0, neg: 0 },
+      '戈特曼四骑士': { weight: 1.0, uses: 0, pos: 0, neg: 0 }
+    };
+    this._saveWeights();
+  },
+
+  _saveWeights: function() {
+    try { localStorage.setItem('shuxing_framework_weights', JSON.stringify(this._frameworkWeights)); } catch(e) {}
+  },
+
+  recordFrameworkFeedback: function(name, positive) {
+    this._initWeights();
+    var fw = this._frameworkWeights[name];
+    if (!fw) return;
+    fw.uses++;
+    if (positive) { fw.pos++; fw.weight = Math.min(2.0, fw.weight + 0.1); }
+    else { fw.neg++; fw.weight = Math.max(0.3, fw.weight - 0.15); }
+    this._saveWeights();
+  },
+
+  getFrameworkWeightsSummary: function() {
+    this._initWeights();
+    return Object.entries(this._frameworkWeights)
+      .map(function(e) { return { name: e[0], weight: Math.round(e[1].weight*100)/100, uses: e[1].uses, score: e[1].uses > 0 ? Math.round((e[1].pos/e[1].uses)*100) : 0 }; })
+      .sort(function(a, b) { return b.weight - a.weight; });
+  },
+
+  /**
+   * 智能选择分析框架（带权重调整）
    */
   _selectFrameworks: function(userInput) {
-    const selected = [];
-    const input = (userInput || '').toLowerCase();
+    this._initWeights();
+    var selected = [];
+    var input = (userInput || '').toLowerCase();
 
     // 默认框架（总是包含）
     selected.push('星座+MBTI性格匹配分析');
@@ -400,6 +444,11 @@ window.ANALYSIS_ENGINE = {
         if (!selected.includes(pick)) selected.push(pick);
       }
     }
+
+    // 记录本次使用的框架
+    var w = this._frameworkWeights;
+    selected.forEach(function(f) { if (w[f]) w[f].uses++; });
+    this._saveWeights();
 
     return selected;
   },
