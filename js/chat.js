@@ -176,15 +176,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // API连接状态检测
     function checkAPIAvailability() {
-        fetch('/api/chat', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{role:'user',content:'ping'}], max_tokens: 1, stream: false }),
-            signal: AbortSignal.timeout(5000) 
-        })
+        fetch('/api/health', { method: 'GET', signal: AbortSignal.timeout(3000) })
             .then(function(r) { return r.json().catch(function() { return {}; }); })
             .then(function(data) {
-                if (data && !data.error) {
+                if (data && data.status === 'ok') {
                     useAPIModel = true;
                     var badge = document.getElementById('model-badge');
                     if (badge) {
