@@ -77,14 +77,33 @@
     </div>
     
     <div class="test-controls">
-        <button class="test-btn primary" onclick="runAllTests()"><i class="fas fa-play"></i> 运行全部测试</button>
+        <button class="test-btn primary" onclick="runAllTests()"><i class="fas fa-play"></i> 功能测试</button>
         <button class="test-btn" onclick="toggleAll()"><i class="fas fa-expand"></i> 展开/收起</button>
         <button class="test-btn" onclick="clearResults()"><i class="fas fa-eraser"></i> 清除结果</button>
+    </div>
+    
+    <div class="test-controls" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;margin-top:-8px;">
+        <span style="color:#6a7298;font-size:0.8rem;width:100%;text-align:center;margin-bottom:8px;">💬 模拟对话测试</span>
+        <button class="test-btn" onclick="runDialogueAll()"><i class="fas fa-comments"></i> 全部场景</button>
+        <button class="test-btn" onclick="runDialogueScenario('separation')">💔 刚分手</button>
+        <button class="test-btn" onclick="runDialogueScenario('confused')">🔍 困惑</button>
+        <button class="test-btn" onclick="runDialogueScenario('relationship')">🤝 关系问题</button>
+        <button class="test-btn" onclick="runDialogueScenario('crush')">💕 暗恋</button>
+        <button class="test-btn" onclick="runDialogueQuality()">📊 质量评测</button>
+        <button class="test-btn" onclick="runDialogueStress(30)">⚡ 压力30轮</button>
+        <button class="test-btn primary" onclick="runFullSuite()"><i class="fas fa-rocket"></i> 全量测试</button>
     </div>
     
     <div class="test-container" id="test-container"></div>
     
     <div class="test-msg" id="test-msg"></div>
+    
+    <div class="dialogue-results" id="dialogue-results" style="display:none;max-width:800px;margin:20px auto 0;padding:16px 20px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+        <h3 style="font-size:0.95rem;color:#8b7eff;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-comments"></i> 对话测试结果
+        </h3>
+        <div id="dialogue-output" style="font-size:0.82rem;color:#8890b0;line-height:1.8;max-height:400px;overflow-y:auto;"></div>
+    </div>
     
     <div class="summary-bar" id="summary-bar" style="display:none;">
         <div class="stat"><span>总计</span><span class="num total" id="total-num">0</span></div>
@@ -98,6 +117,7 @@
     <script src="js/model-scheduler.js"></script>
     <script src="js/personality-data.js"></script>
     <script src="js/test-framework.js"></script>
+    <script src="js/dialogue-test.js"></script>
     <script>
     var categories = [
         { key: 'Core', label: '⚙️ 核心模块', icon: 'fa-cog' },
@@ -232,8 +252,52 @@
         }, 200);
     }
     
+    function runDialogueAll() { runDialogue('runAll'); }
+    function runDialogueScenario(s) { runDialogue('runScenario', s); }
+    function runDialogueQuality() { runDialogue('qualityTest'); }
+    function runDialogueStress(n) { runDialogue('stressTest', n); }
+    function runFullSuite() {
+        runAllTests();
+        setTimeout(function() { runDialogue('run'); }, 500);
+    }
+    
+    function runDialogue(method, param) {
+        var output = document.getElementById('dialogue-output');
+        var panel = document.getElementById('dialogue-results');
+        panel.style.display = 'block';
+        output.innerHTML = '<span class="loading"></span> 正在运行...';
+        
+        setTimeout(function() {
+            var oldLog = console.log;
+            var logs = [];
+            console.log = function() {
+                var args = Array.prototype.slice.call(arguments);
+                logs.push(args.join(' '));
+                oldLog.apply(console, args);
+            };
+            
+            try {
+                var result;
+                if (typeof DIALOGUE_TEST[method] === 'function') {
+                    result = DIALOGUE_TEST[method](param);
+                }
+                console.log = oldLog;
+                output.innerHTML = logs.map(function(l) {
+                    if (l.indexOf('✅') >= 0 || l.indexOf('🎉') >= 0) return '<span style="color:#48bb78">' + l + '</span>';
+                    if (l.indexOf('❌') >= 0 || l.indexOf('⚠️') >= 0) return '<span style="color:#f56565">' + l + '</span>';
+                    if (l.indexOf('---') >= 0 || l.indexOf('===') >= 0) return '<span style="color:#8b7eff;font-weight:600">' + l + '</span>';
+                    return l;
+                }).join('<br>');
+            } catch(e) {
+                console.log = oldLog;
+                output.innerHTML = '<span style="color:#f56565">错误: ' + e.message + '</span>';
+            }
+        }, 100);
+    }
+    
     initPanel();
     console.log('🧪 测试面板已加载 — 点击"运行全部测试"开始');
+    console.log('💬 对话测试已加载 — 点击场景按钮模拟对话');
     </script>
 </body>
 </html>
