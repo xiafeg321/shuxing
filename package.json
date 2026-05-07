@@ -1,0 +1,13 @@
+{
+  "name": "shuxing",
+  "version": "1.2.0",
+  "description": "数星 - AI情感陪伴与关系分析工具",
+  "scripts": {
+    "dev": "node proxy-server.js",
+    "build": "echo 'Static site - no build required'",
+    "start": "node proxy-server.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}

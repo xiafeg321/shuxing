@@ -1,0 +1,18 @@
+{
+  "name": "数星",
+  "description": "AI情感陪伴与关系分析工具",
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "installCommand": null,
+  "devCommand": "node proxy-server.js",
+  "functions": {
+    "api/chat.js": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "DEEPSEEK_KEY": "sk-f01481a824b243b28999980106c876c8"
+  }
+}
