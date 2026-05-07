@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 : ['今天心情不太好', '好想找人说说话', '能陪我一会吗', '聊聊日常吧'];
         } else {
             replies = hasPersona
-                ? ['帮我分析一下这段关系', '他到底在想什么', '我该怎么走出来', '我们还有可能吗']
+                ? ['帮我分析一下这段关系', '她到底在想什么', '我们还有可能吗', '我该怎么走出来']
                 : ['帮我分析一段感情', '我感觉很难受', '如何放下一个人', '我该怎么办'];
         }
         
@@ -558,15 +558,29 @@ document.addEventListener('DOMContentLoaded', function() {
             ].filter(Boolean).join('\n');
         } else {
             // ===== 咨询（分析TA） =====
+            // 使用分析引擎生成结构化分析prompt
+            const analysisPrompt = ANALYSIS_ENGINE.buildAnalysisPrompt('') || {};
+            
             cachedSystemPrompt = [
                 '你是情感分析顾问，精通星座MBTI。帮用户理解TA，不是扮演TA。',
                 nicknameInfo,
                 `分析对象：`,
                 promptPersona,
+                analysisPrompt.systemIntro || '',
+                analysisPrompt.userInfo || '',
+                analysisPrompt.relationshipInfo || '',
                 promptChat,
                 progressInfo,
                 l2info,
                 memoryAnchor,
+                analysisPrompt.analysisInstruction || (
+                    '请按以下结构给出分析：\n' +
+                    '1️⃣ 当前状态判断\n' +
+                    '2️⃣ 核心问题定位\n' +
+                    '3️⃣ 对方视角解读\n' +
+                    '4️⃣ 行动建议\n' +
+                    '5️⃣ 一句话总结'
+                ),
                 `规则：60-200字，专业温暖。基于人格特征做分析。给出疗愈建议。不评判。直接说，不加括号。不同次回复不同角度。`
             ].filter(Boolean).join('\n');
         }
@@ -613,6 +627,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (roundTip) {
             addBotMessage(roundTip, currentMode);
             addSystemMessage('💫 旅程还在继续，我依然在这里');
+        }
+        
+        // ===== 星析模式：分析触发检测 =====
+        // 当用户提出分析请求时，清除system prompt缓存以获取更新版本
+        if (currentMode === 'counseling') {
+            const analysisKeywords = [
+                '分析', '评估', '总结', '诊断', '为什么', '原因',
+                '可能性', '能不能', '有没有可能', '复合',
+                '她是怎么想的', '他是什么意思',
+                '帮我看', '给我分析', '我想搞清楚',
+                '走不出来', '怎么走出来', '该不该',
+                '性格匹配', '合适', '适合',
+                '相处', '沟通', '矛盾', '吵架',
+                '报告', '结论', '建议',
+                '你觉得', '你认为', '从你的角度来看'
+            ];
+            const needsRefresh = analysisKeywords.some(kw => text.includes(kw));
+            if (needsRefresh) {
+                // 清除缓存，让buildSystemPrompt重新生成（包含最新的分析框架）
+                cachedSystemPrompt = '';
+                systemPromptBuilt = false;
+            }
         }
         
         // ===== 人物模型：增加对话轮数 =====
