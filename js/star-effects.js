@@ -143,11 +143,37 @@ function createBackgroundGlow(container) {
     });
 }
 
+// ===== 情侣剪影（文档5.8.2节） =====
+function createCoupleSilhouette() {
+    if (document.getElementById('couple-silhouette')) return;
+    var div = document.createElement('div');
+    div.className = 'couple-silhouette';
+    div.id = 'couple-silhouette';
+    var heads = document.createElement('div');
+    heads.className = 'couple-heads';
+    div.appendChild(heads);
+    document.body.appendChild(div);
+}
+
+// ===== 海面波光（文档5.8.3节） =====
+function createSeaShimmer() {
+    if (document.getElementById('sea-shimmer')) return;
+    var div = document.createElement('div');
+    div.className = 'sea-shimmer';
+    div.id = 'sea-shimmer';
+    document.body.appendChild(div);
+}
+
 // 导出
 window.StarEffects = {
     start: (container) => {
         createBackgroundGlow(container);
-        startShootingStars(container, 6000 + Math.random() * 4000);
+        // 流星频率：文档说3-5分钟一次，但演示时调整为1.5-3分钟
+        startShootingStars(container, 90000 + Math.random() * 90000);
+        // 添加情侣剪影
+        createCoupleSilhouette();
+        // 添加海面波光
+        createSeaShimmer();
     },
     stop: stopShootingStars
 };
