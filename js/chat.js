@@ -538,18 +538,39 @@ function updateModelProgressBar() {
             }
         }
         
-        // 重要记忆检测
+        // 重要记忆检测（增强版）
         const memoryPatterns = [
-            /最(印象深|难忘|深刻|感动|开心|幸福)的/,
-            /记得(有一次|那天|那时|那一次)/,
-            /还记(得|忆).{0,5}(一次|天|次|事)/,
-            /那次(约会|见面|旅行|看电影|吃饭|吵架|矛盾)/,
-            /(第一次|最后一次)(.{5,30})/,
+            /最(印象深|难忘|深刻|感动|开心|幸福|遗憾)的/,
+            /记得(有一次|那天|那时|那一次|之前)/,
+            /还记(得|忆).{0,5}(一次|一天|一回|件事)/,
+            /那次(约会|见面|旅行|看电影|吃饭|吵架|矛盾|告白|牵手)/,
+            /(第一次|最后一次)(.{5,40})/,
+            /有一(次|回)(.{5,40})/,
+            /印象最深(.{5,40})/,
+            /忘不了(.{5,30})/,
+            /那(天|次|时候)(.{5,40})/,
         ];
         for (const pattern of memoryPatterns) {
-            if (pattern.test(text) && text.length >= 8) {
-                CHARACTER_MODEL.recordInfo('deepMemory', text, text.substring(0, 50));
+            const match = text.match(pattern);
+            if (match && text.length >= 6) {
+                CHARACTER_MODEL.recordInfo('deepMemory', text.substring(0, 60), text.substring(0, 50));
                 collected.push({ type: 'deepMemory', value: text.substring(0, 50) });
+            }
+        }
+        
+        // 相处模式检测
+        const patternPatterns = [
+            /她(总是|经常|每次|从来)(.{1,20})/,
+            /我们(经常|总是|平时|一般)(.{1,20})/,
+            /她(习惯|喜欢|爱)(.{1,10})做/,
+            /吵架.{0,10}(冷战|不说话|主动|哄|道歉)/,
+            /她(吃醋|粘人|独立|冷淡|热情|主动|被动)/,
+            /相处.{0,5}(模式|方式|习惯)/
+        ];
+        for (const pattern of patternPatterns) {
+            if (pattern.test(text) && !CHARACTER_MODEL.getModel().L2.interactionPatterns.some(function(p) { return text.includes(p.substring(0, 6)); })) {
+                CHARACTER_MODEL.recordInfo('interactionPattern', text.substring(0, 40), text.substring(0, 40));
+                collected.push({ type: 'interactionPattern' });
             }
         }
         
