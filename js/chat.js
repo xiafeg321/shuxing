@@ -107,6 +107,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // ---------- 启动 ----------
     init();
     
+    // API连接状态检测
+    function checkAPIAvailability() {
+        fetch('/api/health', { method: 'GET', signal: AbortSignal.timeout(3000) })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok') {
+                    useAPIModel = true;
+                    var badge = document.getElementById('model-badge');
+                    if (badge) {
+                        var activeModels = Object.keys(data.models || {}).filter(function(m) { return data.models[m] === '✅'; });
+                        badge.innerHTML = (activeModels.length > 0 ? '🌐 ' + activeModels[0] : '🌐 AI在线');
+                        badge.style.background = '#e8eaff';
+                        badge.style.color = '#5c6bcc';
+                    }
+                }
+            })
+            .catch(function() {
+                // API不可用，使用本地引擎
+                useAPIModel = false;
+                var badge = document.getElementById('model-badge');
+                if (badge) {
+                    badge.innerHTML = '💻 本地模式';
+                    badge.style.background = '#e6ffe6';
+                    badge.style.color = '#2d7a2d';
+                    badge.title = '离线模式：AI服务器未运行，使用本地回复引擎';
+                }
+                // 首次使用时友好提示
+                addSystemMessage('💡 当前为本地模式（AI服务器离线），回复可能较为简洁。如需AI智能回复，请启动 proxy-server.js');
+            });
+    }
+    
     // 模型切换事件（AI ↔ 本地降级）
     const modelBadge = document.getElementById('model-badge');
     if (modelBadge) {
