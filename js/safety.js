@@ -49,7 +49,13 @@ window.SAFETY = {
     
     if (this._roundCount >= 1000 && !this._hasShownRoundTip) {
       this._hasShownRoundTip = true;
+      this._roundCount = 0;
       return '这段旅程并非终点，我的爱人，向前走吧，那有只属于你的光，在等着你～ ✨';
+    }
+    
+    // 每2000轮可再次提示
+    if (this._roundCount >= 2000 && this._hasShownRoundTip) {
+      this._hasShownRoundTip = false;
     }
     
     return null;
