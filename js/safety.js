@@ -41,7 +41,7 @@ window.SAFETY = {
   },
   
   // ===== 高危回复（固定） =====
-  crisisReply: '嗯，你现在可能需要更多帮助，数星只是陪伴工具，但我愿意陪着你，在这里。',
+  crisisReply: '你现在可能需要更多帮助，数星只是陪伴工具。',
   
   // ===== 1000轮提示 =====
   checkRoundLimit: function() {

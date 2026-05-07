@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 | 数星</title>
+    <meta name="theme-color" content="#7c8aff">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .legal-page { max-width: 720px; margin: 0 auto; padding: 20px; }
+        .legal-page h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .legal-page .update-date { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+        .legal-page h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+        .legal-page p, .legal-page li { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8; }
+        .legal-page ul { padding-left: 20px; margin: 8px 0; }
+        .legal-page li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width:800px;">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <div class="legal-page">
+            <h1>数星隐私政策</h1>
+            <p class="update-date">更新日期：2026-05-07 | 生效日期：2026-05-07</p>
+
+            <h2>一、信息收集</h2>
+            <p>数星仅收集您主动提供的信息，包括：</p>
+            <ul>
+                <li>您设置的星座、MBTI、昵称等人格信息</li>
+                <li>您导入的聊天记录（仅用于分析人物特征）</li>
+                <li>对话历史（存储在您的设备本地）</li>
+            </ul>
+            <p>所有数据遵循最小必要原则，我们只收集实现服务所必需的信息。</p>
+
+            <h2>二、信息存储</h2>
+            <ul>
+                <li>所有对话和人物模型数据默认存储在您的设备本地（localStorage）</li>
+                <li>当您使用AI模型服务时，对话内容会通过加密通道传输至模型服务商</li>
+                <li>我们不会在服务器端长期存储您的对话内容</li>
+            </ul>
+
+            <h2>三、数据安全</h2>
+            <ul>
+                <li>全站通信采用HTTPS加密传输</li>
+                <li>本地存储数据仅供您本人访问</li>
+                <li>我们不会将您的数据出售或分享给第三方</li>
+            </ul>
+
+            <h2>四、您的权利</h2>
+            <ul>
+                <li><strong>导出权</strong>：您可随时在「个人中心」导出全部数据备份</li>
+                <li><strong>删除权</strong>：您可随时在「个人中心」清除对话历史和重置人物模型</li>
+                <li><strong>知情权</strong>：我们仅收集您主动输入的信息，不会在后台收集任何数据</li>
+            </ul>
+
+            <h2>五、免责声明</h2>
+            <ul>
+                <li>数星是AI情感陪伴工具，不是专业心理咨询替代品</li>
+                <li>AI分析结果仅供参考，不构成专业建议</li>
+                <li>您对上传的内容（聊天记录等）拥有完全所有权和责任</li>
+                <li>禁止使用数星模拟公众人物</li>
+            </ul>
+
+            <h2>六、联系我们</h2>
+            <p>如对隐私政策有任何疑问，请通过项目GitHub Issues联系我们。</p>
+        </div>
+    </div>
+    <script src="js/star-effects.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var c = document.getElementById('stars-container');
+            if (c && window.StarEffects) StarEffects.start(c);
+        });
+    </script>
+</body>
+</html>

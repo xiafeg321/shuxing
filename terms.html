@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户服务协议 | 数星</title>
+    <meta name="theme-color" content="#7c8aff">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .legal-page { max-width: 720px; margin: 0 auto; padding: 20px; }
+        .legal-page h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .legal-page .update-date { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+        .legal-page h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+        .legal-page p, .legal-page li { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8; }
+        .legal-page ul { padding-left: 20px; margin: 8px 0; }
+        .legal-page li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width:800px;">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <div class="legal-page">
+            <h1>数星用户服务协议</h1>
+            <p class="update-date">更新日期：2026-05-07 | 生效日期：2026-05-07</p>
+
+            <h2>1. 服务说明</h2>
+            <p>数星是一个基于AI的情感陪伴与关系分析工具。服务包括但不限于：</p>
+            <ul>
+                <li>星伴：基于用户输入的人物信息，AI模拟特定人物风格进行对话</li>
+                <li>星析：基于星座、MBTI和用户描述，提供关系分析和建议</li>
+            </ul>
+
+            <h2>2. 用户责任</h2>
+            <ul>
+                <li>您保证所输入的信息不侵犯他人合法权益</li>
+                <li>您不得利用数星模拟公众人物、历史人物或任何未经授权的第三方</li>
+                <li>您不得利用数星传播违法、违规或有害信息</li>
+                <li>您对自身的情感状态和决策负完全责任</li>
+            </ul>
+
+            <h2>3. 免责声明</h2>
+            <ul>
+                <li>数星是AI情感陪伴工具，<strong>不是专业心理咨询替代品</strong></li>
+                <li>AI分析结果仅供参考，不构成任何形式的专业建议</li>
+                <li>如您有严重心理困扰，请及时寻求专业心理咨询师或医疗机构的帮助</li>
+                <li>数星不对因使用本服务而产生的任何直接或间接损失承担责任</li>
+                <li>AI可能产生不准确或不恰当的回复，您应理性看待</li>
+            </ul>
+
+            <h2>4. 知识产权</h2>
+            <ul>
+                <li>数星的品牌、UI设计、源代码等知识产权归项目所有者所有</li>
+                <li>您上传的聊天记录等内容，所有权归您所有</li>
+                <li>AI生成的回复内容不主张知识产权</li>
+            </ul>
+
+            <h2>5. 服务变更与终止</h2>
+            <p>我们保留随时修改或终止服务的权利，变更后将通过网站公告通知。</p>
+
+            <h2>6. 争议解决</h2>
+            <p>本协议适用中华人民共和国法律。因本协议引起的争议，双方应友好协商解决。</p>
+        </div>
+    </div>
+    <script src="js/star-effects.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var c = document.getElementById('stars-container');
+            if (c && window.StarEffects) StarEffects.start(c);
+        });
+    </script>
+</body>
+</html>
