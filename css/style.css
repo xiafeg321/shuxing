@@ -2,25 +2,30 @@
 /* 温暖治愈系 · 星辰主题 */
 
 :root {
-    /* 主色调 - 温暖治愈系星空 */
-    --primary: #7c8aff;
-    --primary-light: #a8b2ff;
-    --primary-dark: #5a68e6;
-    --secondary: #6ba3d9;
-    --secondary-light: #8ec5f0;
-    --accent: #ff8a76;
-    --accent-light: #ffb3a0;
+    /* 主色调 - 深夜海边星空沉浸感（文档5.8.2节） */
+    --primary: #8b7eff;
+    --primary-light: #a99bff;
+    --primary-dark: #6d5ee6;
+    --secondary: #5b8fc9;
+    --secondary-light: #7dabdf;
+    --accent: #ff9a56;
+    --accent-light: #ffb87a;
     --accent-warm: #f6a5b8;
-    --bg: #f5f7ff;
-    --bg-gradient: linear-gradient(135deg, #f5f7ff 0%, #eef1ff 50%, #f0ecff 100%);
-    --card: #ffffff;
-    --card-hover: #fafbff;
-    --text: #3d3d5c;
-    --text-secondary: #7a7a9a;
-    --text-muted: #a8a8c8;
-    --border: #e6e9ff;
-    --shadow: rgba(124, 138, 255, 0.08);
-    --shadow-hover: rgba(124, 138, 255, 0.15);
+    --bg: #0d1b2a;
+    --bg-gradient: linear-gradient(180deg, #0a1628 0%, #152238 40%, #1a2744 70%, #1f2d4a 100%);
+    --card: rgba(255, 255, 255, 0.08);
+    --card-hover: rgba(255, 255, 255, 0.12);
+    --card-solid: rgba(22, 34, 56, 0.95);
+    --text: #e8e8f0;
+    --text-secondary: #a0a8c0;
+    --text-muted: #6a7298;
+    --border: rgba(255, 255, 255, 0.10);
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --warm-glow: #ffd89b;
+    --warm-glow-dim: rgba(255, 216, 155, 0.08);
     
     /* 字体 */
     --font: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -1137,20 +1142,25 @@ body {
 
 /* ===== 暗色模式 ===== */
 [data-theme="dark"] {
-    --primary: #8b9aff;
-    --primary-light: #7c8aff;
-    --primary-dark: #6a7cf0;
-    --secondary: #5a8fc0;
-    --bg: #151725;
-    --bg-gradient: linear-gradient(135deg, #121422 0%, #1a1c32 50%, #181b30 100%);
-    --card: #252842;
-    --card-hover: #2d3050;
-    --text: #e2e4f0;
-    --text-secondary: #a0a3bf;
-    --text-muted: #70738f;
-    --border: rgba(255,255,255,0.08);
-    --shadow: rgba(0,0,0,0.2);
-    --shadow-hover: rgba(0,0,0,0.35);
+    --primary: #7c8aff;
+    --primary-light: #9aabff;
+    --primary-dark: #5a6be0;
+    --secondary: #4a7db8;
+    --bg: #060e1a;
+    --bg-gradient: linear-gradient(180deg, #060e1a 0%, #0c1a2e 40%, #122238 70%, #162542 100%);
+    --card: rgba(255, 255, 255, 0.05);
+    --card-hover: rgba(255, 255, 255, 0.09);
+    --card-solid: rgba(8, 16, 28, 0.97);
+    --text: #d8dce8;
+    --text-secondary: #8890b0;
+    --text-muted: #556088;
+    --border: rgba(255,255,255,0.07);
+    --shadow: rgba(0,0,0,0.4);
+    --shadow-hover: rgba(0,0,0,0.6);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --warm-glow: #e8c88a;
+    --warm-glow-dim: rgba(232, 200, 138, 0.06);
 }
 
 [data-theme="dark"] body {

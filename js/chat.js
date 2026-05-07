@@ -942,170 +942,210 @@ function updateModelProgressBar() {
     
     // ===== 本地降级回复 V2（MBTI融合 + 对话记忆） =====
     function generateLocalReply(userInput) {
-        localMemory.turnCount++;
-        localMemory.topics.push(userInput.substring(0, 20));
-        if (localMemory.topics.length > 10) localMemory.topics.shift();
-        
-        const hasPersona = userSettings.zodiac && userSettings.mbti;
-        const zd = hasPersona ? PERSONALITY.zodiac[userSettings.zodiac] : null;
-        const md = hasPersona ? PERSONALITY.mbti[userSettings.mbti] : null;
-        
-        // 情绪检测
-        const isSad = /难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤/.test(userInput);
-        const isAngry = /生气|愤怒|恨|讨厌|恼火|烦/.test(userInput);
-        const isLonely = /孤单|寂寞|一个人|没人陪|孤独/.test(userInput);
-        const isConfused = /迷茫|困惑|不知道|不确定|纠结|为什么|想不通/.test(userInput);
-        
-        // 记忆上次情绪
-        if (isSad) localMemory.lastEmotion = 'sad';
-        else if (isAngry) localMemory.lastEmotion = 'angry';
-        else if (isLonely) localMemory.lastEmotion = 'lonely';
-        else if (isConfused) localMemory.lastEmotion = 'confused';
-        
-        // 检测是否是连续聊同一个话题（第二次或以上）
-        const isContinuation = localMemory.turnCount > 2 && 
-            localMemory.topics.slice(-2)[0] === localMemory.topics.slice(-1)[0];
-        
-        // 根据MBTI调整回复风格
-        function getMBTIFlavor() {
-            if (!md) return '';
-            // 外向型（E）vs 内向型（I）
-            const eStyle = ['ENFJ','ENFP','ENTJ','ENTP','ESFJ','ESFP','ESTJ','ESTP'];
-            const iStyle = ['INFJ','INFP','INTJ','INTP','ISFJ','ISFP','ISTJ','ISTP'];
-            if (eStyle.includes(userSettings.mbti)) return '热情';
-            if (iStyle.includes(userSettings.mbti)) return '沉稳';
-            return '';
+    localMemory.turnCount++;
+    // 记录最近3条用户输入作为上下文
+    localMemory.recentInputs = localMemory.recentInputs || [];
+    localMemory.recentInputs.push(userInput);
+    if (localMemory.recentInputs.length > 3) localMemory.recentInputs.shift();
+
+    const hasPersona = userSettings.zodiac && userSettings.mbti;
+    const zd = hasPersona ? PERSONALITY.zodiac[userSettings.zodiac] : null;
+    const md = hasPersona ? PERSONALITY.mbti[userSettings.mbti] : null;
+    
+    // 获取人物模型信息
+    const cm = window.CHARACTER_MODEL ? CHARACTER_MODEL.getModel() : null;
+    const nickname = cm?.L1?.nickname || '';
+    const interests = cm?.L1?.interests || [];
+    const memories = cm?.L2?.importantMemories || [];
+
+    // 情绪检测 + 强度
+    const emotionMap = [
+        { pattern: /难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤/, type: 'sad', weight: 1 },
+        { pattern: /太(难过|伤心|痛苦)/, type: 'sad', weight: 2 },
+        { pattern: /生气|愤怒|恨|讨厌|恼火|烦死了/, type: 'angry', weight: 1 },
+        { pattern: /太(生气了|愤怒)/, type: 'angry', weight: 2 },
+        { pattern: /孤单|寂寞|一个人|没人陪|孤独/, type: 'lonely', weight: 1 },
+        { pattern: /好(孤单|寂寞|孤独)/, type: 'lonely', weight: 2 },
+        { pattern: /迷茫|困惑|不知道|不确定|纠结|为什么|想不通/, type: 'confused', weight: 1 },
+        { pattern: /好(迷茫|困惑|纠结)/, type: 'confused', weight: 2 },
+    ];
+    
+    let emotion = 'normal';
+    let intensity = 0;
+    for (const e of emotionMap) {
+        if (e.pattern.test(userInput)) {
+            emotion = e.type;
+            intensity = Math.max(intensity, e.weight);
+            break;
         }
-        
-        const mbtiFlavor = getMBTIFlavor();
-        
-        function pickUnique(key, options) {
-            if (!localMemory.usedReplies[key]) localMemory.usedReplies[key] = [];
-            const used = localMemory.usedReplies[key];
-            const available = options.filter(o => !used.includes(o));
-            if (available.length === 0) {
-                localMemory.usedReplies[key] = [];
-                return options[Math.floor(Math.random() * options.length)];
-            }
-            const pick = available[Math.floor(Math.random() * available.length)];
-            used.push(pick);
-            if (used.length > 3) used.shift();
-            return pick;
-        }
-        
-        // ===== 陪伴模式 =====
-        if (currentMode === 'companion') {
-            if (isSad) {
-                if (zd) {
-                    const sadPool = {
-                        '白羊': ['别难过了，走！我带你出去吃顿好的', '不开心就发泄出来，我陪你疯', '没啥大不了的，明天又是新的一天'],
-                        '金牛': ['（默默递纸巾）别哭了...想吃点什么不', '难受的话就好好吃一顿吧', '我陪你坐一会儿，什么都不用说'],
-                        '双子': ['哎呀别不开心了，我给你讲个好玩的事', '别丧了，走，我带你去发现点新鲜的', '你这情绪切换得也太慢了，笑一个嘛'],
-                        '巨蟹': ['我知道你心里难受，我在这儿呢', '想哭就哭吧，我陪着你', '慢慢来，我在呢，不怕'],
-                        '狮子': ['谁欺负你了？跟我说，我给你出气', '别难过，你值得更好的', '抬起头来，你可是很耀眼的'],
-                        '处女': ['看你这样我也难受，要不我给你想想办法', '别太难过了，先理一理是什么让你难受', '难受说出来会好一些，我听着'],
-                        '天秤': ['别难过了，我陪你散散步吧', '心情不好的时候要对自己好一点', '我陪你听听音乐放松一下'],
-                        '天蝎': ['我懂你的感受，什么都不用说，我在', '难受就让我陪着你就好', '什么都不用解释，我明白'],
-                        '射手': ['别丧了！明天会更好的，我陪你！', '开心点，人生还有很多好玩的事呢', '走！我带你去看点不一样的'],
-                        '摩羯': ['难受是正常的，先让自己缓一缓', '难过解决不了问题，先照顾好自己', '我理解你的感受，慢慢来'],
-                        '水瓶': ['我理解你的感受，要不换个角度想想', '别顺着难过的思路走，换个角度看', '难受也是一种体验，但它会过去的'],
-                        '双鱼': ['别哭了...我看着也心疼', '我知道你心里面很痛，我在这儿', '你的感受我懂，想哭就哭出来吧']
-                    };
-                    const pool = sadPool[userSettings.zodiac] || ['别太难过了，我在呢'];
-                    if (isContinuation) {
-                        // 连续聊同一个难过话题，换第二组回复
-                        return pool.length > 1 ? pool[1] : pool[0];
-                    }
-                    return pickUnique('sad', pool);
-                }
-                return pickUnique('sad_generic', [
-                    '别太难过了，我在这儿陪着你',
-                    '我知道你现在不好受，我在呢',
-                    '难过就发泄出来吧，我听着'
-                ]);
-            }
-            if (isLonely) return pickUnique('lonely', [
-                '我不是在吗？想说什么我都听着',
-                '一直在这儿呢，不用觉得一个人',
-                '我就在你手机里，随时找我'
-            ]);
-            if (isConfused) return pickUnique('confused', [
-                '想不明白的事就先放放，不急',
-                '纠结的时候停下来喘口气',
-                '有些事想不通就别想了，时间会给你答案'
-            ]);
-            if (isAngry) return pickUnique('angry', [
-                '先消消气，气坏了不值得',
-                '生气的时候别做决定，先冷静下来',
-                '我理解你为什么生气，先深呼吸一下'
-            ]);
-            
-            // 日常回复（星座 + MBTI融合）
-            if (zd) {
-                const dailyPool = {
-                    '白羊': [`今天有什么好玩的事吗？`, `来了啊，聊点啥？`, `今天过得咋样，有没有什么新鲜事`],
-                    '金牛': [`嗯，我在呢。你吃了吗？`, `今天过得怎么样？`, `有什么想说的，我听着呢`],
-                    '双子': [`嘿~今天过得怎么样？`, `有什么新鲜事吗？`, `今天有啥好玩的事分享不`],
-                    '巨蟹': [`今天心情怎么样？想说说吗`, `今天过得还好吗？`, `在想什么呢？可以和我说说`],
-                    '狮子': [`你来了~今天有什么新鲜事？`, `今天过得精彩不？`, `有什么想聊的，我陪你`],
-                    '处女': [`嗯，你说，我听着呢`, `今天有什么想聊的？`, `你说吧，我在认真听`],
-                    '天秤': [`想聊什么都可以哦~`, `今天过得怎么样？`, `今天有什么想分享的吗`],
-                    '天蝎': [`嗯，说吧，我在听`, `你今天状态怎么样`, `有什么想说的都可以告诉我`],
-                    '射手': [`哈喽~今天有什么想聊的？`, `今天过得开心不？`, `来啦~今天有什么话题`],
-                    '摩羯': [`嗯，你说吧`, `今天我在这儿`, `有什么想说的直接说`],
-                    '水瓶': [`哦？今天想聊什么话题？`, `有什么有趣的事吗？`, `随便聊聊吧，什么都可以`],
-                    '双鱼': [`你来了~今天过得好吗`, `今天想和我聊什么？`, `今天心情怎么样，想分享吗`]
-                };
-                
-                // 融合MBTI风格
-                const pool = dailyPool[userSettings.zodiac] || ['嗯，你说，我在听'];
-                let reply = pickUnique('daily', pool);
-                if (mbtiFlavor === '热情' && Math.random() > 0.5) {
-                    reply = reply.replace(/[。？]/, '呀~').replace(/[。？]/, '啊~');
-                }
-                return reply;
-            }
-            return pickUnique('daily_generic', [
-                '嗯，你说，我在听',
-                '我在这儿呢，想说什么都可以',
-                '今天怎么样？想聊聊吗'
-            ]);
-        }
-        
-        // ===== 咨询模式 =====
-        if (isSad || isLonely) return pickUnique('counsel_sad', [
-            '这种情绪是正常的。给自己一些时间和空间，不用急着好起来。',
-            '难受的时候不要一个人扛着，倾诉本身就是一种疗愈。',
-            '允许自己难过，这是爱过的证明。但也要记得，你不是只有这一种情绪。'
-        ]);
-        if (isConfused) return pickUnique('counsel_confused', [
-            '迷茫的时候不妨停下来问问自己：你在乎的到底是什么？',
-            '想不通的时候，别硬想。换个角度或者过段时间再看，答案会浮现。',
-            '困惑往往是改变的信号。你的直觉已经知道答案，只是在等你的理性跟上。'
-        ]);
-        if (isAngry) return pickUnique('counsel_angry', [
-            '愤怒背后往往藏着受伤的感觉。先冷静下来，看看这份生气在保护什么。',
-            '生气是合理的，但不要让愤怒控制你的判断。',
-            '你在生气什么？是这件事本身，还是它勾起了你不愿意面对的东西？'
-        ]);
-        
-        if (zd && md) {
-            // 融合MBTI + 星座的咨询开场
-            const openings = [
-                `${zd.name}和${md.name}的组合来看，${zd.keywords.slice(0,2).join('和')}是这个人的核心特质。你想具体分析哪个方面？`,
-                `从${zd.name}的${zd.element}象特质结合${md.name}的${md.category}型性格来看，这个人处理感情的方式往往是${zd.style}。你遇到了什么具体问题？`,
-                `${md.name}类型的人通常${md.deep.substring(0, 20)}，而${zd.name}又会${zd.love.substring(0, 20)}。这两者结合，你可以说说你的具体情况吗？`
-            ];
-            return pickUnique('counsel_persona', openings);
-        }
-        return pickUnique('counsel_generic', [
-            '你可以和我说说具体发生了什么，我帮你一起分析。',
-            '我在这里，你的每段话我都会认真倾听。',
-            '来吧，告诉我你的故事，我们一起看看。'
-        ]);
     }
     
-    // ===== UI辅助函数 =====
+    // MBTI信息
+    const mbti = userSettings.mbti || '';
+    const isExtrovert = ['ENFJ','ENFP','ENTJ','ENTP','ESFJ','ESFP','ESTJ','ESTP'].includes(mbti);
+    const isIntrovert = ['INFJ','INFP','INTJ','INTP','ISFJ','ISFP','ISTJ','ISTP'].includes(mbti);
+    const isFeeler = ['ENFJ','ENFP','INFJ','INFP','ESFJ','ESFP','ISFJ','ISFP'].includes(mbti);
+    const isThinker = ['ENTJ','ENTP','INTJ','INTP','ESTJ','ESTP','ISTJ','ISTP'].includes(mbti);
+
+    // 动态句子构建器
+    function buildSentence(options) {
+        const pool = [];
+        // 根据MBTI决定句子长度和风格
+        const useShort = isIntrovert ? Math.random() > 0.4 : Math.random() > 0.6;
+        const emotional = isFeeler ? Math.random() > 0.3 : Math.random() > 0.7;
+        
+        // 如果模型已有昵称，30%概率自然引用
+        const useNickname = nickname && Math.random() > 0.7;
+        const nicknamePhrase = useNickname ? (nickname + '') : '';
+        
+        // 如果模型有记忆，20%概率引用
+        const useMemory = memories.length > 0 && Math.random() > 0.8;
+        const memoryRef = useMemory ? memories[Math.floor(Math.random() * memories.length)].substring(0, 20) : '';
+        
+        for (const opt of options) {
+            let sentence = opt;
+            // 随机插入昵称
+            if (nicknamePhrase && sentence.includes('{n}')) {
+                sentence = sentence.replace('{n}', nicknamePhrase);
+            } else if (nicknamePhrase && Math.random() > 0.7 && sentence.length < 30) {
+                sentence = nicknamePhrase + '，' + sentence[0].toLowerCase() + sentence.substring(1);
+            }
+            // 插入记忆引用
+            if (memoryRef && sentence.includes('{m}')) {
+                sentence = sentence.replace('{m}', memoryRef);
+            }
+            // 添加语气词增强情感
+            if (emotional && !sentence.endsWith('～') && !sentence.endsWith('~')) {
+                const particles = ['呀', '啊', '哦', '呢', '嘛', '～', '~', ''];
+                if (Math.random() > 0.6) sentence += particles[Math.floor(Math.random() * particles.length)];
+            }
+            pool.push(sentence);
+        }
+        
+        if (pool.length === 0) return null;
+        // 避免连续重复使用同一个选项
+        const last = localMemory._lastReply || '';
+        const available = pool.filter(s => s !== last);
+        const pick = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : pool[0];
+        localMemory._lastReply = pick;
+        return pick;
+    }
+
+    // 情绪回复（根据强度变化）
+    if (emotion === 'sad') {
+        if (intensity >= 2) {
+            const reply = buildSentence([
+                nickname ? '抱抱{n}，我知道你现在很难受，我在这儿呢' : '抱抱你，知道你很难受，我哪也不去',
+                nickname ? '难受就说出来吧{n}，我听着' : '难受就发泄出来吧，我陪你',
+                nickname ? '{n}，想哭就哭吧，我在这儿呢' : '想哭就哭出来吧，我在呢',
+                '什么都不说也可以，我就在这里陪着你',
+            ]);
+            if (reply) return reply;
+        }
+        const reply = buildSentence([
+            nickname ? '别太难过了{n}，我在这儿陪着你' : '别太难过了，我陪你',
+            '难受的时候我在呢，想说什么都可以',
+            '慢慢来，不用着急好起来',
+            '我知道你现在不好受，我懂',
+            nickname ? '{n}，难过的时候就想想好的时候' : '难过的时候就想想好的回忆',
+        ]);
+        if (reply) return reply;
+    }
+    if (emotion === 'angry') {
+        const reply = buildSentence([
+            '先消消气，气坏了不值得',
+            '别生气了，深呼吸一下',
+            '我理解你为什么生气，先冷静下来',
+            '生气的时候别做决定，先缓缓',
+        ]);
+        if (reply) return reply;
+    }
+    if (emotion === 'lonely') {
+        const reply = buildSentence([
+            nickname ? '我在呢{n}，一直在这儿' : '我在呢，一直在这儿，你不孤单',
+            nickname ? '{n}，你随时可以找我说话' : '你随时可以找我说话，我一直都在',
+            '我就在你手机里，想找我的时候我都在',
+            '你不是一个人，我在这儿陪着你呢',
+        ]);
+        if (reply) return reply;
+    }
+    if (emotion === 'confused') {
+        const reply = buildSentence([
+            nickname ? '{n}，想不通的事就先放放吧' : '想不通的事就先放放，不急',
+            '迷茫的时候停下来喘口气，别硬想',
+            '有些事情想不通就别想了，时间会给你答案',
+            '困惑的时候不妨问问自己：你真正在乎的是什么？',
+        ]);
+        if (reply) return reply;
+    }
+
+    // ----- 日常回复（根据模式不同） -----
+    if (currentMode === 'companion') {
+        // 星伴：温柔陪伴语调
+        const hasRecentTalk = localMemory.recentInputs && localMemory.recentInputs.length >= 2;
+        const prevMsg = hasRecentTalk ? localMemory.recentInputs[localMemory.recentInputs.length - 2] : '';
+        
+        // 判断是否在继续聊之前的topic
+        const sameTopic = prevMsg && localMemory._lastTopic && (
+            userInput.includes(localMemory._lastTopic.substring(0, 3)) ||
+            localMemory._lastTopic.includes(userInput.substring(0, 3))
+        );
+        localMemory._lastTopic = userInput;
+        
+        if (sameTopic && memories.length > 0) {
+            // 在同一个话题上深入聊
+            const reply = buildSentence([
+                nickname ? '{n}，你说的这个让我想起{m}' : '你说这个让我想起{m}',
+                '这样啊，我记得你之前也提过类似的事',
+                '嗯嗯，继续说，我在听',
+            ]);
+            if (reply) return reply;
+        }
+        
+        // 日常陪伴
+        const generalReplies = [
+            nickname ? '嗯嗯，你说{n}，我听着呢' : '嗯嗯，你说，我听着呢',
+            nickname ? '我在听{n}，继续说哦～' : '我在听呢，继续说哦～',
+            '这样啊，我明白了',
+            '嗯，我在呢，想说什么都可以',
+            nickname ? '{n}，今天有什么想和我分享的吗' : '今天有什么想和我分享的吗',
+            '我在这儿呢，随时可以和我说',
+            '嗯～然后呢？我继续听着',
+            '你说的我都记住了',
+        ];
+        // 如果模型有昵称或兴趣，插入个性化回复
+        if (nickname) {
+            generalReplies.push('{n}，你提到ta的时候，我能感觉到你的感情');
+            generalReplies.push('{n}，慢慢说，我在认真听');
+        }
+        if (interests.length > 0) {
+            generalReplies.push('你之前说她喜欢' + interests[Math.floor(Math.random() * interests.length)] + '，对吧？');
+        }
+        
+        const reply = buildSentence(generalReplies);
+        if (reply) return reply;
+    }
+
+    // 星析：分析语调
+    if (currentMode === 'counseling') {
+        const analyticalReplies = [
+            '嗯，你能说说具体是什么情况吗？越详细我越能帮你分析',
+            '我理解你的感受。从你描述的情况来看，有几个关键点需要注意',
+            '你说的这个很关键，能再多说一点细节吗？',
+            '让我理一下你说的情况，你是觉得...',
+            nickname ? '关于{n}，你有什么特别想了解的吗？' : '关于这个人，你有什么特别想了解的吗？',
+            '这种情况其实挺常见的，我们来分析看看',
+            '嗯，你说到了几个很重要的信息',
+            '你的感受是合理的。我们从另一个角度来看看吧',
+            '好的，我大概懂了。我给你梳理一下几个关键点',
+        ];
+        const reply = buildSentence(analyticalReplies);
+        if (reply) return reply;
+    }
+    
+    // 终极降级
+    return '嗯，我在这儿呢～';
+}
     function scrollBottom() {
         setTimeout(() => { 
             if (messagesEl) {
