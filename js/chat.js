@@ -381,6 +381,13 @@ function updateModelProgressBar() {
         cachedSystemPrompt = '';
         RHYTHM.lastStructures = [];
         
+        // 切换模式视觉样式
+        var ci = document.getElementById('chat-interface');
+        if (ci) {
+            ci.classList.remove('mode-companion', 'mode-counseling');
+            ci.classList.add(mode === 'companion' ? 'mode-companion' : 'mode-counseling');
+        }
+        
         if (modeSelection) modeSelection.style.display = 'none';
         if (chatInterface) chatInterface.style.display = 'flex';
         updateModeDisplay();
@@ -474,6 +481,14 @@ function updateModelProgressBar() {
         currentMode = currentMode === 'companion' ? 'counseling' : 'companion';
         systemPromptBuilt = false;
         cachedSystemPrompt = '';
+        
+        // 切换视觉样式
+        var ci = document.getElementById('chat-interface');
+        if (ci) {
+            ci.classList.remove('mode-companion', 'mode-counseling');
+            ci.classList.add(currentMode === 'companion' ? 'mode-companion' : 'mode-counseling');
+        }
+        
         updateModeDisplay();
         updateDynamicQuickReplies();
         addSystemMessage(`已切换到${currentMode === 'companion' ? '🌟 星伴' : '🔍 星析'}模式 💫`);
