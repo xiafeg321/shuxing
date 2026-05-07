@@ -16,6 +16,9 @@ const AI_CONFIG = {
     currentModel: 'deepseek'
 };
 
+// ===== 对话页全局状态 =====
+const CHAT_MODEL = { progressBar: null, progressText: null };
+
 // ===== 全局数据引用 =====
 const PERSONALITY = window.PERSONALITY || {};
 
@@ -124,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function init() {
+        // 创建进度条
         loadSettings();
         // 初始化人物模型
         CHARACTER_MODEL.initModel();
@@ -148,6 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
         checkSetup();
         updatePlaceholder();
         updateDynamicQuickReplies();
+        // 创建进度条
+        createProgressBar();
         
         if (userSettings.zodiac && userSettings.mbti && modeSelection) {
             const hint = document.createElement('div');
@@ -164,6 +170,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+
+// ===== 对话页模型进度条 =====
+function createProgressBar() {
+    if (!window.CHARACTER_MODEL) return;
+    const personaInfo = document.getElementById('persona-info');
+    if (!personaInfo || document.getElementById('model-progress-wrapper')) return;
+    
+    const wrapper = document.createElement('div');
+    wrapper.id = 'model-progress-wrapper';
+    wrapper.style.cssText = 'margin-top:2px;display:flex;align-items:center;gap:6px;';
+    
+    const text = document.createElement('span');
+    text.id = 'model-progress-text';
+    text.style.cssText = 'font-size:0.7rem;color:var(--text-muted);white-space:nowrap;';
+    
+    const track = document.createElement('div');
+    track.style.cssText = 'flex:1;height:3px;background:var(--border);border-radius:4px;overflow:hidden;max-width:60px;';
+    
+    const bar = document.createElement('div');
+    bar.id = 'model-progress-bar';
+    bar.style.cssText = 'height:100%;border-radius:4px;transition:width 0.6s ease;width:0%;';
+    
+    track.appendChild(bar);
+    wrapper.appendChild(text);
+    wrapper.appendChild(track);
+    personaInfo.parentNode.insertBefore(wrapper, personaInfo.nextSibling);
+    
+    CHAT_MODEL.progressBar = bar;
+    CHAT_MODEL.progressText = text;
+    updateModelProgressBar();
+}
+
+function updateModelProgressBar() {
+    if (!window.CHARACTER_MODEL || !CHAT_MODEL.progressBar) return;
+    const cm = CHARACTER_MODEL.getModel();
+    const pct = CHARACTER_MODEL.getTotalProgress();
+    const bar = CHAT_MODEL.progressBar;
+    const text = CHAT_MODEL.progressText;
+    if (bar) {
+        bar.style.width = Math.min(100, pct) + '%';
+        bar.style.background = 'linear-gradient(90deg, #a78bfa, #7c8aff)';
+    }
+    if (text) text.textContent = CHARACTER_MODEL.getStageName() + ' · ' + Math.round(pct/10)*10 + '%';
+}
+
     function checkSetup() {
         if (!userSettings.zodiac || !userSettings.mbti) {
             const reminder = document.createElement('div');
@@ -629,23 +680,21 @@ document.addEventListener('DOMContentLoaded', function() {
             addSystemMessage('💫 旅程还在继续，我依然在这里');
         }
         
+        // ===== 信息修正检测 =====
+        // 当用户说"不对"、"不是"、"她不喜欢"等时，识别为修正
+        const correctionPatterns = [/不对[,，]?(.+)/, /不是[,，]?(.+)/, /错了[,，]?(.+)/, /她(不|没)(.{1,20})/, /不是这样/, /说错了/, /我搞错了/];
+        let isCorrection = correctionPatterns.some(p => p.test(text));
+        if (isCorrection && CHARACTER_MODEL) {
+            CHARACTER_MODEL.recordImplicitFeedback('correct', text);
+            cachedSystemPrompt = '';
+            systemPromptBuilt = false;
+        }
+        
         // ===== 星析模式：分析触发检测 =====
-        // 当用户提出分析请求时，清除system prompt缓存以获取更新版本
         if (currentMode === 'counseling') {
-            const analysisKeywords = [
-                '分析', '评估', '总结', '诊断', '为什么', '原因',
-                '可能性', '能不能', '有没有可能', '复合',
-                '她是怎么想的', '他是什么意思',
-                '帮我看', '给我分析', '我想搞清楚',
-                '走不出来', '怎么走出来', '该不该',
-                '性格匹配', '合适', '适合',
-                '相处', '沟通', '矛盾', '吵架',
-                '报告', '结论', '建议',
-                '你觉得', '你认为', '从你的角度来看'
-            ];
+            const analysisKeywords = ['分析', '评估', '总结', '诊断', '为什么', '原因', '可能性', '能不能', '有没有可能', '复合', '她是怎么想的', '他是什么意思', '帮我看', '给我分析', '我想搞清楚', '走不出来', '怎么走出来', '该不该', '性格匹配', '合适', '适合', '相处', '沟通', '矛盾', '吵架', '报告', '结论', '建议', '你觉得', '你认为', '从你的角度来看'];
             const needsRefresh = analysisKeywords.some(kw => text.includes(kw));
             if (needsRefresh) {
-                // 清除缓存，让buildSystemPrompt重新生成（包含最新的分析框架）
                 cachedSystemPrompt = '';
                 systemPromptBuilt = false;
             }
@@ -655,7 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
         CHARACTER_MODEL.incrementConversationCount();
         
         // ===== 人物模型：检测可收集信息 =====
-        // 尝试从用户输入中提取新的信息
         const collected = tryCollectInfo(text);
         
         // ===== 人物模型：检查阶段转换 =====
