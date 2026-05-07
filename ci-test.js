@@ -168,7 +168,16 @@ if (RUN_FULL || RUN_UNIT) {
     return { pass: val.a === 1 };
   });
   
-  test('Core: CHARACTER_MODEL模块存在', function() {
+  test('Core: 引导式询问规则', function() {
+    // 检查星伴模式system prompt是否包含"一次只问一个问题"
+    var companionPrompt = '';
+    // 这个检查间接验证了chat.js的修改
+    var chatCode = require('fs').readFileSync('js/chat.js', 'utf8');
+    var hasRule = chatCode.indexOf('一次只问一个问题') >= 0;
+    return { pass: hasRule, msg: hasRule ? '已包含引导式询问规则' : '缺少引导式询问规则' };
+});
+
+test('Core: CHARACTER_MODEL模块存在', function() {
     return { pass: !!global.CHARACTER_MODEL, msg: '无CHARACTER_MODEL' };
   });
   

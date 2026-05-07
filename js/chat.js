@@ -778,7 +778,7 @@ function updateModelProgressBar() {
                 progressInfo,
                 l2info,
                 memoryAnchor,
-                `规则：20-60字，像真人聊天。不要加括号注释。用TA的风格回应情绪。每次回复句式要不同。人格保持一致。`
+                `规则：20-60字，像真人聊天。不要加括号注释。用TA的风格回应情绪。每次回复句式要不同。人格保持一致。一次只问一个问题，不要同时问多个。`
             ].filter(Boolean).join('\n');
         } else {
             // ===== 咨询（分析TA） =====
