@@ -22,6 +22,15 @@ const CHAT_MODEL = { progressBar: null, progressText: null };
 // ===== 全局数据引用 =====
 const PERSONALITY = window.PERSONALITY || {};
 
+// ===== 注入额外样式 =====
+(function injectExtraStyles() {
+    if (document.getElementById('shuxing-extra-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'shuxing-extra-styles';
+    s.textContent = '.scroll-bottom-btn{position:absolute;bottom:70px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--primary);font-size:16px;cursor:pointer;box-shadow:0 2px 12px var(--shadow);opacity:0;transform:translateY(10px);transition:all 0.3s;z-index:10;display:flex;align-items:center;justify-content:center}.scroll-bottom-btn.show{opacity:1;transform:translateY(0)}.scroll-bottom-btn:hover{background:var(--card-hover);box-shadow:0 4px 16px var(--shadow-hover)}';
+    document.head.appendChild(s);
+})();
+
 // ===== 对话节奏控制 =====
 const RHYTHM = {
     lastReplyLength: 0,
@@ -688,6 +697,10 @@ function updateModelProgressBar() {
             CHARACTER_MODEL.recordImplicitFeedback('correct', text);
             cachedSystemPrompt = '';
             systemPromptBuilt = false;
+            // 显示已收到修正
+            if (Math.random() > 0.3) {
+                addSystemMessage('📝 收到，我已经记住了✌️');
+            }
         }
         
         // ===== 星析模式：分析触发检测 =====
@@ -1094,7 +1107,25 @@ function updateModelProgressBar() {
     
     // ===== UI辅助函数 =====
     function scrollBottom() {
-        setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
+        setTimeout(() => { 
+            if (messagesEl) {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                // 隐藏回到底部按钮
+                const btn = document.getElementById('scroll-bottom-btn');
+                if (btn) btn.classList.remove('show');
+            }
+        }, 50);
+        
+        // 监听滚动显示回到底部按钮
+        if (messagesEl && !messagesEl._scrollListener) {
+            messagesEl._scrollListener = true;
+            messagesEl.addEventListener('scroll', function() {
+                const btn = document.getElementById('scroll-bottom-btn');
+                if (!btn) return;
+                const isAtBottom = this.scrollHeight - this.scrollTop - this.clientHeight < 100;
+                btn.classList.toggle('show', !isAtBottom);
+            });
+        }
     }
     
     function escapeHtml(text) {
