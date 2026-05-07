@@ -999,15 +999,16 @@ function updateModelProgressBar() {
     const interests = cm?.L1?.interests || [];
     const memories = cm?.L2?.importantMemories || [];
 
-    // 情绪检测 + 强度
+    // 情绪检测 + 强度（覆盖常见情绪表达）
     const emotionMap = [
-        { pattern: /难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤/, type: 'sad', weight: 1 },
-        { pattern: /太(难过|伤心|痛苦)/, type: 'sad', weight: 2 },
-        { pattern: /生气|愤怒|恨|讨厌|恼火|烦死了/, type: 'angry', weight: 1 },
-        { pattern: /太(生气了|愤怒)/, type: 'angry', weight: 2 },
-        { pattern: /孤单|寂寞|一个人|没人陪|孤独/, type: 'lonely', weight: 1 },
-        { pattern: /好(孤单|寂寞|孤独)/, type: 'lonely', weight: 2 },
-        { pattern: /迷茫|困惑|不知道|不确定|纠结|为什么|想不通/, type: 'confused', weight: 1 },
+        { pattern: /难过|伤心|痛苦|难受|想哭|心碎|崩溃|绝望|悲伤|心情不好|不开心|郁闷/, type: 'sad', weight: 1 },
+        { pattern: /太(难过|伤心|痛苦|难受)/, type: 'sad', weight: 2 },
+        { pattern: /很(难过|伤心|痛苦|难受|不开心)/, type: 'sad', weight: 1.5 },
+        { pattern: /生气|愤怒|烦死了|好烦|烦人|讨厌|恼火/, type: 'angry', weight: 1 },
+        { pattern: /太(生气了|愤怒|烦人)/, type: 'angry', weight: 2 },
+        { pattern: /孤单|寂寞|一个人|没人陪|孤独|好想她|想她了/, type: 'lonely', weight: 1 },
+        { pattern: /好(孤单|寂寞|孤独|想她)/, type: 'lonely', weight: 2 },
+        { pattern: /迷茫|困惑|不知道|不确定|纠结|为什么|想不通|该不该|怎么办|怎么做|怎么做才好/, type: 'confused', weight: 1 },
         { pattern: /好(迷茫|困惑|纠结)/, type: 'confused', weight: 2 },
     ];
     

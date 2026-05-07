@@ -1,0 +1,45 @@
+# 数星自动化测试工作流
+# 每次push到main自动运行全部测试
+
+name: CI Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Syntax Check
+      run: |
+        echo "=== 语法检查 ==="
+        for f in js/*.js; do
+          node --check "$f" && echo "✅ $f" || echo "❌ $f" 
+        done
+    
+    - name: Run Unit Tests
+      run: |
+        echo "=== 单元测试 ==="
+        node ci-test.js
+    
+    - name: Run Dialogue Tests
+      run: |
+        echo "=== 对话测试 ==="
+        node ci-test.js --dialogue
+    
+    - name: Check Deployment
+      run: |
+        echo "=== 部署检查 ==="
+        echo "JS文件数: $(find js -name '*.js' | wc -l)"
+        echo "HTML文件数: $(find . -name '*.html' -not -path './.git/*' | wc -l)"
