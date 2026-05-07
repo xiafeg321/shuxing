@@ -413,11 +413,108 @@ function handleFileUpload(e) {
             userSelections.chatHistory = ta.value;
             saveToLocalStorage();
             updateChatCharCount();
+            
+            // 智能分析聊天记录
+            const analysis = analyzeChatLogs(content.substring(0, 2000));
+            if (analysis) {
+                const insightEl = document.getElementById('personality-insight');
+                if (insightEl) {
+                    // 如果还没生成完整洞察，先显示分析结果
+                    const lines = [];
+                    if (analysis.tone) lines.push('💬 语气：' + analysis.tone);
+                    if (analysis.patterns.length > 0) lines.push('📝 常用表达：' + analysis.patterns.slice(0, 3).join('、'));
+                    if (analysis.emojis.length > 0) lines.push('😊 常用表情：' + analysis.emojis.slice(0, 3).join(' '));
+                    if (analysis.averageLength) lines.push('📏 消息长度：' + analysis.averageLength);
+                    if (lines.length > 0) {
+                        showToast('分析完成 ✨ 提取到' + lines.length + '项特征', 'success');
+                    }
+                }
+            }
+            
             showToast('文件已导入 ✅', 'success');
         }
     };
     reader.readAsText(file, 'UTF-8');
     e.target.value = '';
+}
+
+/**
+ * 聊天记录智能分析
+ * 从聊天记录中提取说话风格、常用词、语气等特征
+ */
+function analyzeChatLogs(text) {
+    if (!text || text.trim().length < 20) return null;
+    
+    const lines = text.split('\n').filter(l => l.trim()).map(l => l.trim());
+    
+    // 1. 语气分析
+    const toneAnalysis = [];
+    if (/[~～]/.test(text)) toneAnalysis.push('温柔亲切');
+    if (/[！!]{2,}/.test(text)) toneAnalysis.push('活泼热情');
+    if (/[。.。]/.test(text) && text.split(/[。.。]/).length > 5) toneAnalysis.push('沉稳');
+    if (/[?？]/.test(text) && (text.match(/[?？]/g) || []).length > lines.length * 0.3) toneAnalysis.push('喜欢提问');
+    if (/哈哈|嘿嘿|嘻嘻|hh|hah/.test(text)) toneAnalysis.push('开朗爱笑');
+    if (/嗯嗯|好的|好的|好的吧|好吧|是的/.test(text)) toneAnalysis.push('顺从配合');
+    if (/切|哼|呵|无语|服了/.test(text)) toneAnalysis.push('有小脾气');
+    
+    const tone = toneAnalysis.length > 0 ? toneAnalysis.join('，') : '自然日常';
+    
+    // 2. 常用表达/口头禅
+    const patterns = [];
+    const commonPhrases = ['好吧', '确实', '真的', '其实', '反正', '算了', 'maybe', '大概', '也许', '感觉', '有点', '真的吗', '哈哈', '笑死', '救命', '绝了', '可以', '行吧', '懂了', '原来如此'];
+    for (const phrase of commonPhrases) {
+        const count = (text.match(new RegExp(phrase, 'g')) || []).length;
+        if (count >= 2) patterns.push(phrase);
+    }
+    // 找到出现最多的单词
+    const words = text.replace(/[，。！？、；：""''（）【】{}《》\s]/g, ' ').split(' ').filter(w => w.length >= 2);
+    const wordFreq = {};
+    for (const w of words) {
+        wordFreq[w] = (wordFreq[w] || 0) + 1;
+    }
+    const sorted = Object.entries(wordFreq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    for (const [word, count] of sorted) {
+        if (count >= 3 && !patterns.includes(word) && !commonPhrases.includes(word)) {
+            patterns.push(word);
+        }
+    }
+    
+    // 3. 表情使用
+    // Skip emoji detection for simplicity
+    const emojis = [];
+    const uniqueEmojis = [];
+    
+    // 4. 消息长度分析
+    const lengths = lines.map(l => l.length);
+    const avgLen = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
+    const lengthDesc = avgLen < 10 ? '简短回复为主' : avgLen < 30 ? '中等长度' : '喜欢说长句';
+    
+    // 5. 时间分布（如果有时间戳模式）
+    const timePattern = /(\d{1,2}[:：]\d{2})/g;
+    const times = text.match(timePattern) || [];
+    const nightCount = times.filter(t => parseInt(t) >= 22 || parseInt(t) < 6).length;
+    const timeDesc = nightCount > times.length * 0.5 ? '喜欢深夜聊天' : '';
+    
+    const result = {
+        tone: tone || '自然日常',
+        patterns: [...new Set(patterns)].slice(0, 5),
+        emojis: uniqueEmojis.slice(0, 5),
+        averageLength: lengthDesc,
+        nightOwl: timeDesc
+    };
+    
+    // 自动填充到人物模型
+    if (window.CHARACTER_MODEL) {
+        CHARACTER_MODEL.initModel();
+        if (result.tone) {
+            CHARACTER_MODEL.recordInfo('speakingStyle', result.tone + (result.patterns.length > 0 ? '，常用：' + result.patterns.join('、') : ''));
+        }
+        if (result.emojis.length > 0 && !CHARACTER_MODEL.getModel().L1.nickname) {
+            // 不强制填充，留给用户选择
+        }
+    }
+    
+    return result;
 }
 
 function updateChatCharCount() {
