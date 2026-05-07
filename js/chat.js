@@ -8,12 +8,12 @@
  *   5. 对话节奏控制
  */
 
-// ===== DeepSeek API配置 =====
+// ===== 模型调度配置 =====
+// API key统一由 proxy-server.js 管理，前端不存key
 const AI_CONFIG = {
-    apiKey: 'sk-f01481a824b243b28999980106c876c8',
     baseURL: '',  // 留空走同域代理(/api/chat)
-    model: 'deepseek-v4-flash',
-    enabled: true
+    enabled: true,
+    currentModel: 'deepseek'
 };
 
 // ===== 全局数据引用 =====
@@ -95,13 +95,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // ---------- 启动 ----------
     init();
     
-    // 模型切换事件
+    // 模型切换事件（AI ↔ 本地降级）
     const modelBadge = document.getElementById('model-badge');
     if (modelBadge) {
+        // 显示当前活跃模型
+        const activeModels = Object.values(MODEL_SCHEDULER.models).filter(m => m.enabled);
+        if (activeModels.length > 0) {
+            const name = activeModels[0].name;
+            modelBadge.innerHTML = `🌐 ${name}`;
+        }
+        
         modelBadge.addEventListener('click', function() {
             useAPIModel = !useAPIModel;
             if (useAPIModel) {
-                this.innerHTML = '🌐 DeepSeek';
+                const activeModels = Object.values(MODEL_SCHEDULER.models).filter(m => m.enabled);
+                const name = activeModels.length > 0 ? activeModels[0].name : 'AI';
+                this.innerHTML = `🌐 ${name}`;
                 this.style.background = '#e8eaff';
                 this.style.color = '#5c6bcc';
                 showToast('已切换到AI模型，回复更智能 ✨', 'info');
@@ -728,7 +737,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ===== AI流式调用（AbortController + 直接写入气泡） =====
     async function streamAI(userInput, bubbleEl) {
-        if (!AI_CONFIG.enabled || !AI_CONFIG.apiKey) return null;
+        if (!AI_CONFIG.enabled) return null;
         
         const systemPrompt = buildSystemPrompt();
         const contextMsgs = buildContextMessages();
@@ -739,7 +748,9 @@ document.addEventListener('DOMContentLoaded', function() {
             { role: 'user', content: userInput }
         ];
         
-        // 创建AbortController
+        // 使用模型调度器获取请求头和任务配置
+        const headers = MODEL_SCHEDULER.getRequestHeaders(userInput, currentMode);
+        const taskConfig = MODEL_SCHEDULER.getTaskConfig(userInput, currentMode);
         const controller = new AbortController();
         currentAbortController = controller;
         
@@ -752,11 +763,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const apiUrl = AI_CONFIG.baseURL ? `${AI_CONFIG.baseURL}/chat/completions` : '/api/chat';
             const response = await fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Model-Provider': headers['X-Model-Provider'] || 'deepseek',
+                    'X-Model-Name': headers['X-Model-Name'] || 'deepseek-chat',
+                    'X-Task-Tier': headers['X-Task-Tier'] || 'simple'
+                },
                 body: JSON.stringify({
                     messages: messages,
-                    temperature: currentMode === 'companion' ? 0.9 : 0.7,
-                    max_tokens: currentMode === 'companion' ? 200 : 400,
+                    temperature: taskConfig.temperature,
+                    max_tokens: taskConfig.maxTokens,
                     stream: isStreaming
                 }),
                 signal: controller.signal
