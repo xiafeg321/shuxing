@@ -1226,9 +1226,11 @@ function updateModelProgressBar() {
         const useShort = isIntrovert ? Math.random() > 0.4 : Math.random() > 0.6;
         const emotional = isFeeler ? Math.random() > 0.3 : Math.random() > 0.7;
         
-        // 如果模型已有昵称，30%概率自然引用
-        const useNickname = nickname && Math.random() > 0.7;
-        const nicknamePhrase = useNickname ? (nickname + '') : '';
+        // 昵称替换策略：
+        // - {n} 占位符 -> 必须替换（不管概率），否则会显示原始{n}文本
+        // - 额外自然插入昵称 -> 30%概率
+        const nicknamePhrase = nickname || '';
+        const useExtraNickname = nickname && Math.random() > 0.7;
         
         // 如果模型有记忆，20%概率引用
         const useMemory = memories.length > 0 && Math.random() > 0.8;
@@ -1236,15 +1238,17 @@ function updateModelProgressBar() {
         
         for (const opt of options) {
             let sentence = opt;
-            // 随机插入昵称
-            if (nicknamePhrase && sentence.includes('{n}')) {
-                sentence = sentence.replace('{n}', nicknamePhrase);
-            } else if (nicknamePhrase && Math.random() > 0.7 && sentence.length < 30) {
+            // 必须替换 {n}，不管有没有昵称配置（否则用户会看到原始{n}文本！）
+            if (sentence.includes('{n}')) {
+                sentence = sentence.replace(/{n}/g, nicknamePhrase || '你');
+            }
+            // 额外自然插入昵称（30%概率）
+            if (useExtraNickname && Math.random() > 0.7 && sentence.length < 30) {
                 sentence = nicknamePhrase + '，' + sentence[0].toLowerCase() + sentence.substring(1);
             }
-            // 插入记忆引用
-            if (memoryRef && sentence.includes('{m}')) {
-                sentence = sentence.replace('{m}', memoryRef);
+            // 必须替换 {m}（否则用户会看到原始{m}文本）
+            if (sentence.includes('{m}')) {
+                sentence = sentence.replace(/{m}/g, memoryRef || '');
             }
             // 添加语气词增强情感
             if (emotional && !sentence.endsWith('～') && !sentence.endsWith('~')) {
