@@ -14,15 +14,15 @@
 })();
 </script>
 <title>个人中心 | 数星</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/components.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         .profile-page { padding: 24px 0; }
         .profile-header {
             display: flex; align-items: center; gap: 20px;
-            padding: 28px 24px; background: var(--card);
+            padding: 28px 24px; background: var(--bg-card);
             border-radius: var(--radius-md); margin-bottom: 20px;
             border: 1px solid var(--border);
         }
@@ -38,7 +38,7 @@
         .profile-header-info p { font-size: 0.85rem; color: var(--text-secondary); }
 
         .profile-section {
-            background: var(--card); border-radius: var(--radius-md);
+            background: var(--bg-card); border-radius: var(--radius-md);
             padding: 22px 24px; margin-bottom: 16px;
             border: 1px solid var(--border);
         }
@@ -90,7 +90,7 @@
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
         }
         .stat-card {
-            background: var(--card-hover); border-radius: var(--radius-sm);
+            background: var(--bg-card-hover); border-radius: var(--radius-sm);
             padding: 16px; text-align: center;
         }
         .stat-card .num {
@@ -103,7 +103,7 @@
         .action-buttons { display: flex; flex-direction: column; gap: 10px; }
         .action-btn {
             display: flex; align-items: center; gap: 14px;
-            padding: 14px 18px; background: var(--card-hover);
+            padding: 14px 18px; background: var(--bg-card-hover);
             border-radius: var(--radius-sm); border: none; cursor: pointer;
             text-align: left; font-size: 0.9rem; color: var(--text);
             transition: var(--transition); width: 100%;
@@ -129,7 +129,7 @@
             gap: 12px; margin-top: 4px;
         }
         .info-grid .data-item {
-            background: var(--card-hover); border-radius: var(--radius-sm);
+            background: var(--bg-card-hover); border-radius: var(--radius-sm);
             padding: 12px 14px;
         }
         .data-item .label { font-size: 0.78rem; color: var(--text-muted); }
@@ -144,7 +144,7 @@
         /* Toast */
         .profile-toast {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: var(--card); color: var(--text);
+            background: var(--bg-card); color: var(--text);
             padding: 10px 24px; border-radius: var(--radius-full);
             box-shadow: 0 4px 20px rgba(0,0,0,0.12);
             font-size: 0.9rem; z-index: 9999; opacity: 0; transition: all 0.3s;
@@ -173,9 +173,6 @@
                     <h2>我的数星</h2>
                     <p>管理你的人物模型和数据</p>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <!-- 人物信息 -->
@@ -203,9 +200,6 @@
                     <span class="info-label">认识方式</span>
                     <span class="info-value" id="profile-bg">未填写</span>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <!-- 模型进度 -->
@@ -263,9 +257,6 @@
                         <div class="progress-fill total" id="progress-total" style="width:0%"></div>
                     </div>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <!-- 已收集信息 -->
@@ -276,9 +267,6 @@
                 <div id="profile-info-list">
                     <div class="profile-empty">还没有信息，先去聊天吧～</div>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <!-- 统计数据 -->
@@ -296,9 +284,6 @@
                         <div class="label">消息总数</div>
                     </div>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <!-- 设置 -->
@@ -338,9 +323,6 @@
                         <span>重置人物模型</span>
                     </button>
                 </div>
-                <button id="profile-theme-toggle" onclick="toggleProfileTheme()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:var(--transition);padding:8px;" title="切换主题">
-                    <i class="fas fa-moon" id="profile-theme-icon"></i>
-                </button>
             </div>
 
             <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:0.8rem;">
@@ -352,7 +334,9 @@
     <script src="js/star-effects.js"></script>
     <script src="js/personality-data.js"></script>
     <script src="js/character-model.js"></script>
-    <script src="js/profile.js">function toggleActiveMessage() {
+    <script src="js/profile.js"></script>
+    <script>
+function toggleActiveMessage() {
     var current = localStorage.getItem('shuxing_active_msg_enabled');
     var enabled = current !== 'false';
     var newVal = enabled ? 'false' : 'true';

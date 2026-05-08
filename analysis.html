@@ -6,8 +6,8 @@
     <meta name="description" content="人格洞察与分析 - 基于星座和MBTI的深度分析">
     <meta name="theme-color" content="#7b79a0">
     <title>人格洞察 | 数星</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/components.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -17,18 +17,18 @@
         }
 
         .insight-card {
-            background: var(--card);
+            background: var(--bg-card);
             border-radius: var(--radius-xl);
             padding: 32px 28px;
-            box-shadow: 0 8px 32px var(--shadow);
-            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
             margin-bottom: 20px;
             transition: var(--transition);
         }
 
         .insight-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 40px var(--shadow-hover);
+            box-shadow: var(--shadow-lg);
         }
 
         .insight-card .card-header {
@@ -161,7 +161,7 @@
             margin-bottom: 8px;
             transition: var(--transition);
             cursor: pointer;
-            background: var(--card);
+            background: var(--bg-card);
         }
         .history-item:hover {
             border-color: var(--primary-light);
@@ -295,7 +295,7 @@
                     <!-- 在感情中 -->
                     <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg);border:1px solid var(--border);">
                         <div class="card-header" style="margin-bottom:12px;">
-                            <i class="fas fa-heart" style="color:var(--accent);font-size:1.2rem;"></i>
+                            <i class="fas fa-heart" style="color:var(--primary-light);font-size:1.2rem;"></i>
                             <h3 style="font-size:1rem;">在感情中</h3>
                         </div>
                         <p class="insight-text" id="insight-love"></p>

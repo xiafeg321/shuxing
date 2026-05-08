@@ -1136,6 +1136,107 @@ body {
     }
 }
 
+/* ===== UI美化：柔和 & 分层 ===== */
+/* 卡片浮现动画 */
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes starPulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* 所有卡片添加柔和悬浮效果（卡分层） */
+.card-layered {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-layered::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.card-layered:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-md), 0 0 24px rgba(123, 121, 160, 0.06);
+    transform: translateY(-2px);
+}
+
+/* 静态渐变边框装饰 */
+.gradient-border {
+    position: relative;
+}
+
+.gradient-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--primary-dark), transparent, var(--primary-lighter));
+    z-index: -1;
+    opacity: 0.15;
+    transition: opacity 0.4s;
+}
+
+.gradient-border:hover::after {
+    opacity: 0.3;
+}
+
+/* 柔和发光分隔线 */
+.divider-soft {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 16px 0;
+}
+
+/* 星星闪烁背景动效容器 */
+.stars-container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 选中态柔和波纹 */
+.ripple-soft {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-soft::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(123,121,160,0.08), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.ripple-soft:active::after {
+    opacity: 1;
+}
+
 /* ===== 辅助功能 ===== */
 :focus-visible {
     outline: 2px solid var(--primary);
@@ -1164,4 +1265,153 @@ body {
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.6);
     --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+}
+
+/* ===== 小屏极致适配（<375px，如iPhone SE） ===== */
+@media (max-width: 375px) {
+    .container {
+        padding: 12px 10px;
+    }
+    
+    .back-btn {
+        font-size: 0.78rem;
+        padding: 6px 10px;
+    }
+    
+    .logo h1 {
+        font-size: 1.3rem;
+    }
+    
+    .logo-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .selection-card {
+        padding: 10px 8px;
+    }
+    
+    .selection-card .symbol {
+        font-size: 18px;
+    }
+    
+    .selection-card .name {
+        font-size: 0.8rem;
+    }
+    
+    .selection-card .badge {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+    }
+    
+    .selection-card .trait {
+        font-size: 0.65rem;
+    }
+    
+    .selection-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .mode-cards {
+        grid-template-columns: 1fr;
+        padding: 0 4px;
+    }
+    
+    .step-actions {
+        padding: 10px 0;
+    }
+    
+    .btn, .btn-primary, .btn-secondary, .btn-success {
+        padding: 10px 16px;
+        font-size: 0.82rem;
+    }
+    
+    .chat-send-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .chat-messages {
+        padding: 10px 8px;
+    }
+    
+    .message {
+        max-width: 92%;
+    }
+    
+    .quick-reply {
+        font-size: 0.72rem;
+        padding: 4px 10px;
+    }
+    
+    .chat-input-area {
+        padding: 6px 8px 10px;
+    }
+    
+    .chat-input-wrapper {
+        padding: 4px 8px;
+    }
+    
+    .chat-input-field {
+        font-size: 0.85rem;
+    }
+    
+    .chat-header {
+        padding: 8px 10px;
+    }
+    
+    .chat-header-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .chat-header-actions {
+        gap: 4px;
+    }
+    
+    .chat-header-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.72rem;
+    }
+    
+    .welcome-hero {
+        padding: 20px 12px 16px;
+    }
+    
+    .welcome-hero h1 {
+        font-size: 1.4rem;
+    }
+    
+    .welcome-hero .logo-large {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .state-option {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .state-option .icon-wrap {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+    
+    .state-option .info h4 {
+        font-size: 0.82rem;
+    }
+    
+    .entry-card {
+        padding: 12px 14px;
+        gap: 12px;
+    }
+    
+    .entry-card .icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }

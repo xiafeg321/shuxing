@@ -14,7 +14,8 @@
 })();
 </script>
 <title>人格设置 | 数星</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/components.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -132,8 +133,8 @@
                     </div>
                 </div>
 
-                <!-- 步骤2.5：你的信息 -->
-<div class="setup-section" id="step-2_5" style="display:none;">
+                <!-- 步骤3：你的信息 -->
+<div class="setup-section" id="step-3" style="display:none;">
     <h2><i class="fas fa-user"></i> 你的星座和MBTI是？</h2>
     <p class="section-description">分析关系时，我同时需要了解你～这样才能做性格匹配</p>
     
@@ -146,7 +147,7 @@
     
     <div style="margin-bottom:16px;">
         <label style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:6px;">
-            <i class="fas fa-brain" style="color:var(--accent);"></i> 你的MBTI（如果知道的话）
+            <i class="fas fa-brain" style="color:var(--primary);"></i> 你的MBTI（如果知道的话）
         </label>
         <div class="selection-grid" id="my-mbti-grid"></div>
     </div>
@@ -155,14 +156,14 @@
         <button class="btn btn-secondary prev-step" data-prev="2">
             <i class="fas fa-arrow-left"></i> 上一步
         </button>
-        <button class="btn btn-primary next-step" data-next="3" style="max-width:none;">
+        <button class="btn btn-primary next-step" data-next="4" style="max-width:none;">
             下一步
             <i class="fas fa-arrow-right"></i>
         </button>
     </div>
 </div>
 
-<!-- 步骤3：了解更多（可选） -->
+<!-- 步骤4：了解更多（可选） -->
                 <div class="setup-section" id="step-4" style="display:none;">
                     <h2><i class="fas fa-comment-dots"></i> 再多说说她（可选）</h2>
                     <p class="section-description">告诉我更多关于她的信息，我可以学得更像～</p>
@@ -172,7 +173,7 @@
                             <i class="fas fa-user"></i> 她叫什么名字？（或你的称呼）
                         </label>
                         <input type="text" id="input-nickname" placeholder="比如：小雨、她、前女友..." 
-                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--bg-card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
                     </div>
                     
                     <div style="margin-bottom:14px;">
@@ -180,7 +181,7 @@
                             <i class="fas fa-handshake"></i> 你们是怎么认识的？
                         </label>
                         <input type="text" id="input-background" placeholder="比如：大学同学、朋友介绍、抖音认识的..." 
-                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--bg-card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
                     </div>
                     
                     <div style="margin-bottom:14px;">
@@ -188,7 +189,7 @@
                             <i class="fas fa-smile"></i> 她平时喜欢做什么？
                         </label>
                         <input type="text" id="input-interests" placeholder="比如：打游戏、听音乐、看书、逛街..." 
-                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
+                               style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:0.9rem;background:var(--bg-card);color:var(--text);outline:none;transition:var(--transition);box-sizing:border-box;">
                     </div>
                     
                     <div style="margin-bottom:16px;">
@@ -224,19 +225,19 @@
                     </div>
                     
                     <div class="step-actions">
-                        <button class="btn btn-secondary prev-step" data-prev="2">
+                        <button class="btn btn-secondary prev-step" data-prev="3">
                             <i class="fas fa-arrow-left"></i>
                             上一步
                         </button>
-                        <button class="btn btn-primary next-step" data-next="4" style="max-width:none;">
+                        <button class="btn btn-primary next-step" data-next="5" style="max-width:none;">
                             完成，开始吧 ✨
                             <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- 步骤4：完成 -->
-                <div class="setup-section" id="step-4" style="display:none;">
+                <!-- 步骤5：完成 -->
+                <div class="setup-section" id="step-5" style="display:none;">
                     <h2><i class="fas fa-check-circle" style="color:var(--accent-teal);"></i> 准备好了 ✦</h2>
                     <p class="section-description">我已经记住她了，随时可以开始</p>
                     
@@ -250,7 +251,7 @@
                             <span class="value" id="summary-zodiac">未选择</span>
                         </div>
                         <div class="summary-item">
-                            <span class="label"><i class="fas fa-brain" style="color:var(--accent);margin-right:6px;"></i>MBTI</span>
+                            <span class="label"><i class="fas fa-brain" style="color:var(--primary);margin-right:6px;"></i>MBTI</span>
                             <span class="value" id="summary-mbti">未选择</span>
                         </div>
                         <div class="summary-item" id="nickname-summary-item">
@@ -275,7 +276,7 @@
                     </div>
                     
                     <div class="step-actions">
-                        <button class="btn btn-secondary prev-step" data-prev="3">
+                        <button class="btn btn-secondary prev-step" data-prev="4">
                             <i class="fas fa-edit"></i>
                             修改
                         </button>

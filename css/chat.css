@@ -1025,4 +1025,55 @@
         font-size: 0.75rem;
         padding: 5px 12px;
     }
+    
+    .chat-interface {
+        height: calc(100vh - 60px);
+        border-radius: 0;
+        border: none;
+    }
+    
+    .quick-replies {
+        padding: 6px 10px;
+    }
+}
+
+/* iPhone SE等极小屏：更紧凑 */
+@media (max-width: 375px) {
+    .chat-messages {
+        padding: 10px 8px;
+        gap: 10px;
+    }
+    
+    .message .message-content {
+        padding: 8px 12px;
+    }
+    
+    .message .message-content p {
+        font-size: 0.85rem;
+    }
+    
+    .quick-replies {
+        gap: 6px;
+    }
+    
+    .chat-input-wrapper {
+        padding: 4px 8px;
+    }
+    
+    .chat-send-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .chat-header {
+        padding: 8px 10px;
+    }
+    
+    .chat-input-area {
+        padding: 6px 8px 10px;
+    }
+    
+    .mode-card {
+        padding: 20px 16px;
+    }
 }

@@ -430,6 +430,29 @@
     }
 }
 
+/* ===== 移动端适配（components） ===== */
+@media (max-width: 768px) {
+    .inline-list .item {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .card-layered {
+        padding: 16px;
+    }
+    
+    .card-section {
+        padding: 12px 0;
+    }
+}
+
+@media (max-width: 375px) {
+    .inline-list .item {
+        padding: 3px 8px;
+        font-size: 0.72rem;
+    }
+}
+
 /* ===== 新增：卡片堆叠效果（分层） ===== */
 .card-stack {
     position: relative;
