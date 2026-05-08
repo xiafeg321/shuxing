@@ -39,7 +39,7 @@ const chatJs = fs.readFileSync(path.join(BASE, 'js/chat.js'), 'utf8');
 const functions = ['sendMsg','addBotMessage','addSystemMessage','hideTyping',
     'addUserMessage','streamAI','generateLocalReply','buildContextMessages',
     'updateCharCount','saveHistory','scrollBottom','addMessageFooter',
-    'startMode','switchMode','sendDailyActiveMessage','detectEmotion'];
+    'startMode','toggleMode','sendDailyActiveMessage','detectEmotion'];
 functions.forEach(fn => {
     test(`函数: ${fn}()`, () => {
         assert(chatJs.includes('function ' + fn + '('), `${fn}() 未定义`);

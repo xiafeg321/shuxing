@@ -1282,6 +1282,11 @@ body {
         font-size: 1.3rem;
     }
     
+    /* 覆盖设置页 inline font-size:2rem */
+    .header .logo h1 {
+        font-size: 1.4rem !important;
+    }
+    
     .logo-icon-wrapper {
         width: 40px;
         height: 40px;
@@ -1413,5 +1418,141 @@ body {
         width: 40px;
         height: 40px;
         font-size: 18px;
+    }
+    
+    /* ===== 设置页进度条窄屏 ===== */
+    .progress-steps {
+        padding: 0 2px;
+    }
+    
+    .progress-step .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 0.72rem;
+    }
+    
+    .progress-step .step-label {
+        font-size: 0.6rem;
+        max-width: 52px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .progress-steps::before {
+        top: 14px;
+        left: 18px;
+        right: 18px;
+    }
+    
+    /* 设置页各节标题缩小 */
+    .setup-section h2 {
+        font-size: 1.05rem;
+    }
+    
+    .section-description {
+        font-size: 0.8rem;
+    }
+    
+    .quick-tip {
+        padding: 10px 12px;
+        font-size: 0.78rem;
+    }
+    
+    .summary-card {
+        padding: 16px 14px;
+    }
+    
+    .summary-item {
+        padding: 8px 0;
+        font-size: 0.82rem;
+    }
+    
+    .summary-item .label {
+        font-size: 0.8rem;
+    }
+    
+    .summary-item .value {
+        font-size: 0.82rem;
+    }
+    
+    .chat-textarea {
+        padding: 12px 14px;
+        font-size: 0.82rem;
+        min-height: 120px;
+    }
+    
+    .file-upload-area {
+        padding: 20px 14px;
+    }
+    
+    /* 设置页输入框窄屏 */
+    #input-nickname,
+    #input-background,
+    #input-interests {
+        padding: 8px 10px !important;
+        font-size: 0.82rem !important;
+    }
+    
+    /* 个人页窄屏 */
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px 16px;
+    }
+    
+    .profile-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+    }
+    
+    .profile-section {
+        padding: 16px 14px;
+    }
+    
+    .profile-section-title {
+        font-size: 0.9rem;
+    }
+    
+    .profile-info-item {
+        padding: 8px 0;
+    }
+    
+    .info-label {
+        width: 55px;
+        font-size: 0.78rem;
+    }
+    
+    .progress-track {
+        height: 6px;
+    }
+    
+    .progress-header {
+        font-size: 0.78rem;
+    }
+    
+    .stage-badge {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+    
+    /* 分析页窄屏 */
+    .insight-card {
+        padding: 16px 14px;
+    }
+    
+    .insight-text {
+        font-size: 0.82rem;
+    }
+    
+    .tag-cloud .tag {
+        font-size: 0.72rem;
+        padding: 3px 8px;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+        gap: 8px;
     }
 }

@@ -1054,6 +1054,12 @@
     
     .quick-replies {
         gap: 6px;
+        padding: 4px 8px;
+    }
+    
+    .quick-reply {
+        font-size: 0.72rem;
+        padding: 4px 10px;
     }
     
     .chat-input-wrapper {
@@ -1067,13 +1073,99 @@
     
     .chat-header {
         padding: 8px 10px;
+        gap: 8px;
+    }
+    
+    .chat-header-actions {
+        gap: 3px;
+    }
+    
+    .chat-header-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
     }
     
     .chat-input-area {
         padding: 6px 8px 10px;
     }
     
+    .chat-interface {
+        height: calc(100vh - 50px);
+    }
+    
     .mode-card {
         padding: 20px 16px;
+    }
+    
+    /* 覆盖 inline font-size:1.8rem 在模式选择页 */
+    .mode-selection .logo h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    .mode-selection-header p {
+        font-size: 0.82rem;
+    }
+    
+    .mode-selection {
+        gap: 16px;
+        padding: 12px 0;
+    }
+    
+    .mode-cards {
+        gap: 10px;
+    }
+    
+    .mode-card-icon {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 12px;
+    }
+    
+    .mode-card-icon i {
+        font-size: 22px;
+    }
+    
+    .mode-card h3 {
+        font-size: 1rem;
+    }
+    
+    .mode-card p {
+        font-size: 0.8rem;
+    }
+    
+    .chat-header-info h3 {
+        font-size: 0.82rem;
+    }
+    
+    .chat-header-info .persona-hint {
+        font-size: 0.68rem;
+    }
+    
+    .mode-switch-btn {
+        font-size: 0.72rem;
+        padding: 5px 12px;
+    }
+    
+    .mode-switch-wrapper {
+        padding: 4px 8px 2px;
+    }
+    
+    /* 帮助弹窗窄屏适配 */
+    .help-modal-content {
+        padding: 20px 16px;
+    }
+    
+    .help-modal-content h3 {
+        font-size: 1rem;
+    }
+    
+    .help-section h4 {
+        font-size: 0.85rem;
+    }
+    
+    .help-section p,
+    .help-section li {
+        font-size: 0.8rem;
     }
 }

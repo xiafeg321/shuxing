@@ -451,6 +451,98 @@
         padding: 3px 8px;
         font-size: 0.72rem;
     }
+    
+    /* ===== 个人中心页窄屏适配 ===== */
+    /* 覆盖 profile.html inline style */
+    .profile-header {
+        padding: 16px 14px !important;
+        gap: 14px !important;
+    }
+    
+    .profile-avatar {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 22px !important;
+    }
+    
+    .profile-header-info h2 {
+        font-size: 1.1rem !important;
+    }
+    
+    .profile-header-info p {
+        font-size: 0.78rem !important;
+    }
+    
+    .profile-section {
+        padding: 14px 14px !important;
+    }
+    
+    .profile-section-title {
+        font-size: 0.92rem !important;
+    }
+    
+    .profile-info-item {
+        gap: 8px !important;
+        padding: 8px 0 !important;
+    }
+    
+    .info-icon {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 12px !important;
+    }
+    
+    .info-label {
+        width: 54px !important;
+        font-size: 0.78rem !important;
+    }
+    
+    .info-value {
+        font-size: 0.82rem !important;
+    }
+    
+    .stage-badge {
+        font-size: 0.72rem !important;
+        padding: 3px 10px !important;
+    }
+    
+    .stats-grid {
+        gap: 8px !important;
+    }
+    
+    .stat-card {
+        padding: 12px 8px !important;
+    }
+    
+    .stat-card .num {
+        font-size: 1.4rem !important;
+    }
+    
+    .stat-card .label {
+        font-size: 0.7rem !important;
+    }
+    
+    .info-grid {
+        gap: 8px !important;
+    }
+    
+    .info-grid .data-item {
+        padding: 10px 12px !important;
+    }
+    
+    .data-item .label {
+        font-size: 0.7rem !important;
+    }
+    
+    .data-item .value {
+        font-size: 1rem !important;
+    }
+    
+    .action-btn {
+        padding: 12px 14px !important;
+        font-size: 0.82rem !important;
+        gap: 10px !important;
+    }
 }
 
 /* ===== 新增：卡片堆叠效果（分层） ===== */
