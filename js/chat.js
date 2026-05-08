@@ -814,6 +814,15 @@ function updateModelProgressBar() {
     // ===== 发送消息（流式+可取消） =====
     let currentAbortController = null;  // 用于取消旧的AI请求
     
+    // 发送消息 - FIXED v5
+    // 修复历史：
+    //   v5: 修复 hideTyping() 未定义导致的 ReferenceError（按钮卡死）
+    //       添加 try-catch 包裹 await 防止 isWaiting 永远为 true
+    //       修复 addUserMessage 与 updateCharCount 争夺按钮状态的问题
+    //   ⚠️ 以后改这段时务必：
+    //      1. 所有 async 操作必须 try-catch
+    //      2. 确保 isWaiting 和 sendBtn.disabled 在异常路径也能恢复
+    //      3. 不要在 sendMsg 外设置 sendBtn.disabled（由 sendMsg 统一管理）
     async function sendMsg() {
         const text = inputEl?.value.trim();
         if (!text) return;
@@ -821,19 +830,24 @@ function updateModelProgressBar() {
         // 如果正在等待回复 → 取消旧的，发新的（覆盖式）
         if (isWaiting && currentAbortController) {
             currentAbortController.abort();
-            // 清除旧loading
-            hideTyping();
+            // 清除旧loading - 移除对应气泡
+            var lastBotMsg = messagesEl?.querySelector('.message.bot-message:last-child');
+            if (lastBotMsg) lastBotMsg.remove();
+            // 重置等待状态（因为旧请求被取消，需要重新设置）
+            isWaiting = false;  // 确保状态被重置
         }
         
+        // 添加用户消息（注意：addUserMessage 会设置 sendBtn.disabled = true）
         addUserMessage(text);
         if (inputEl) {
             inputEl.value = '';
             inputEl.style.height = 'auto';
         }
-        updateCharCount();
         
         isWaiting = true;
         if (sendBtn) sendBtn.disabled = true;
+        // 注：不再在 sendMsg 中调用 updateCharCount()，
+        // 由 addUserMessage 和上方代码已统一设置 disabled
         
         // ===== 安全检测 =====
         // 高危关键词检测
@@ -939,36 +953,50 @@ function updateModelProgressBar() {
         
         let reply = null;
         
-        if (useAPIModel) {
-            reply = await streamAI(text, streamBubble);
-        } else {
-            clearInterval(dotTimer);
-            await new Promise(r => setTimeout(r, 300));
-            reply = generateLocalReply(text);
+        try {
+            if (useAPIModel) {
+                reply = await streamAI(text, streamBubble);
+            } else {
+                clearInterval(dotTimer);
+                await new Promise(r => setTimeout(r, 300));
+                reply = generateLocalReply(text);
+            }
+        } catch (e) {
+            // 安全网：任何未捕获的异常都不会卡死按钮
+            console.warn('[sendMsg] 回复异常:', e);
+            reply = null;
         }
         
         clearInterval(dotTimer);
         
         // 移除流式光标，添加底部操作栏
-        streamBubble.classList.remove('streaming');
-        
-        if (reply) {
-            streamBubble.querySelector('p').textContent = reply;
-            saveHistory({ type: 'bot', content: reply });
-            RHYTHM.track(reply);
-        } else {
-            const fallback = generateLocalReply(text);
-            streamBubble.querySelector('p').textContent = fallback || '嗯，我在听你说~';
-            saveHistory({ type: 'bot', content: fallback });
+        if (streamBubble && streamBubble.parentNode) {
+            streamBubble.classList.remove('streaming');
+            
+            if (reply) {
+                var pEl = streamBubble.querySelector('p');
+                if (pEl) pEl.textContent = reply;
+                saveHistory({ type: 'bot', content: reply });
+                RHYTHM.track(reply);
+            } else {
+                const fallback = generateLocalReply(text);
+                var pEl = streamBubble.querySelector('p');
+                if (pEl) pEl.textContent = fallback || '嗯，我在听你说~';
+                saveHistory({ type: 'bot', content: fallback });
+            }
+            
+            // 添加消息底部操作栏
+            addMessageFooter(streamBubble, 'bot');
         }
-        
-        // 添加消息底部操作栏
-        addMessageFooter(streamBubble, 'bot');
         
         scrollBottom();
         isWaiting = false;
         currentAbortController = null;
-        if (sendBtn) sendBtn.disabled = inputEl?.value.trim().length === 0;
+        // 恢复按钮状态：输入框为空则禁用，否则启用
+        if (sendBtn) {
+            var inputEmpty = !inputEl || inputEl.value.trim().length === 0;
+            sendBtn.disabled = inputEmpty;
+        }
     }
     
     // ===== 对话上下文摘要（长对话压缩） =====
@@ -1444,7 +1472,8 @@ function updateModelProgressBar() {
         addMessageFooter(div, 'user');
         scrollBottom();
         saveHistory({ type: 'user', content: text });
-        if (sendBtn) sendBtn.disabled = true;
+        // 注意：不要在这里设置 sendBtn.disabled，统一由 sendMsg 管理
+        // 如果在这里设置 disabled，会和 sendMsg 的 updateCharCount() 产生竞争
         
         // 跟踪情绪变化
         if (emotion) trackEmotion(emotion.tag);
@@ -1604,6 +1633,38 @@ function updateModelProgressBar() {
         a.click();
         URL.revokeObjectURL(url);
         showToast('对话已导出 ✅', 'success');
+    }
+    
+    // ===== addBotMessage — 添加机器人回复气泡 =====
+    // 被 sendDailyActiveMessage / startMode / sendMsg 等处调用
+    function addBotMessage(text) {
+        if (!text || !messagesEl) return;
+        var div = document.createElement('div');
+        div.className = 'message bot-message';
+        div.dataset.timestamp = Date.now();
+        div.innerHTML = '<div class="message-content"><p>' + escapeHtml(text) + '</p></div>';
+        messagesEl.appendChild(div);
+        addMessageFooter(div, 'bot');
+        scrollBottom();
+        saveHistory({ type: 'bot', content: text });
+        return div;
+    }
+    
+    // ===== addSystemMessage — 添加系统提示气泡（居中灰色） =====
+    function addSystemMessage(text) {
+        if (!text || !messagesEl) return;
+        var div = document.createElement('div');
+        div.className = 'message system-message';
+        div.innerHTML = '<div class="message-content"><p>' + escapeHtml(text) + '</p></div>';
+        messagesEl.appendChild(div);
+        scrollBottom();
+    }
+    
+    // ===== hideTyping — 隐藏正在输入的提示（typing-indicator） =====
+    function hideTyping() {
+        if (!messagesEl) return;
+        var indicator = messagesEl.querySelector('.typing-indicator');
+        if (indicator) indicator.remove();
     }
 
 });
