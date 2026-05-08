@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="个人中心 - 数星情感陪伴">
-    <meta name="theme-color" content="#7c8aff">
+    <meta name="theme-color" content="#7b79a0">
     <script>
 (function() {
     try {
@@ -28,9 +28,10 @@
         }
         .profile-avatar {
             width: 64px; height: 64px;
-            background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
             border-radius: 20px; display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: #7c3aed; flex-shrink: 0;
+            font-size: 28px; color: var(--primary-light); flex-shrink: 0;
         }
         .profile-header-info { flex: 1; }
         .profile-header-info h2 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
@@ -61,9 +62,9 @@
         .progress-fill {
             height: 100%; border-radius: 10px; transition: width 0.6s ease;
         }
-        .progress-fill.l1 { background: linear-gradient(90deg, #a78bfa, #7c8aff); }
-        .progress-fill.l2 { background: linear-gradient(90deg, #7c8aff, #6ba3d9); }
-        .progress-fill.total { background: linear-gradient(90deg, #7c8aff, #a78bfa, #ff8a76); }
+        .progress-fill.l1 { background: var(--primary); }
+        .progress-fill.l2 { background: var(--primary-light); }
+        .progress-fill.total { background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--accent-rose)); }
 
         /* 信息列表 */
         .profile-info-item {
@@ -76,7 +77,7 @@
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; font-size: 14px;
         }
-        .info-icon { background: #ede9fe; color: #7c3aed; }
+        .info-icon { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--primary-light); }
         .info-label { font-size: 0.85rem; color: var(--text-secondary); width: 70px; flex-shrink: 0; }
         .info-value { font-size: 0.9rem; color: var(--text); flex: 1; }
 
@@ -117,10 +118,10 @@
             display: inline-flex; align-items: center; gap: 6px;
             padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 500;
         }
-        .stage-badge.L1 { background: #ede9fe; color: #7c3aed; }
+        .stage-badge.L1 { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--primary-light); }
         .stage-badge.L2 { background: #dbeafe; color: #2563eb; }
         .stage-badge.L3 { background: #d1fae5; color: #059669; }
-        .stage-badge.L4 { background: #fef3c7; color: #d97706; }
+        .stage-badge.L4 { background: var(--bg-elevated); border: 1px solid var(--accent-gold); color: var(--accent-gold); }
 
         /* 信息区域 */
         .info-grid {
@@ -183,7 +184,7 @@
                     <i class="fas fa-user-circle"></i> 人物信息
                 </div>
                 <div class="profile-info-item">
-                    <span class="info-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-star-and-crescent"></i></span>
+                    <span class="info-icon"><i class="fas fa-star-and-crescent"></i></span>
                     <span class="info-label">星座</span>
                     <span class="info-value" id="profile-zodiac">未设置</span>
                 </div>
@@ -198,7 +199,7 @@
                     <span class="info-value" id="profile-nickname">未填写</span>
                 </div>
                 <div class="profile-info-item">
-                    <span class="info-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-handshake"></i></span>
+                    <span class="info-icon" style="color:var(--accent-gold);"><i class="fas fa-handshake"></i></span>
                     <span class="info-label">认识方式</span>
                     <span class="info-value" id="profile-bg">未填写</span>
                 </div>

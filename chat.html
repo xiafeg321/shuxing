@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="数星对话 - 星伴陪伴 / 星析分析">
-    <meta name="theme-color" content="#7c8aff">
+    <meta name="theme-color" content="#7b79a0">
     <title>数星 · 对话</title>
-    <link rel="stylesheet" href="css/style.css?v=2">
-    <link rel="stylesheet" href="css/chat.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/chat.css?v=4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -24,12 +24,12 @@
         <!-- ===== 模式选择页 ===== -->
         <div class="mode-selection" id="mode-selection">
             <div class="mode-selection-header">
-                <div class="logo" style="margin-bottom:20px;">
-                    <div class="logo-icon-wrapper" style="width:50px;height:50px;border-radius:14px;">
-                        <i class="fas fa-star" style="font-size:22px;"></i>
+                <div class="logo" style="margin-bottom:16px;">
+                    <div class="logo-icon-wrapper" style="width:48px;height:48px;border-radius:14px;">
+                        <i class="fas fa-star" style="font-size:20px;"></i>
                     </div>
                     <div class="logo-text">
-                        <h1 style="font-size:2rem;">开始对话</h1>
+                        <h1 style="font-size:1.8rem;">开始对话</h1>
                     </div>
                 </div>
                 <p>选择你需要的模式，我在这里陪你</p>
@@ -41,7 +41,7 @@
                     <div class="mode-card-icon">
                         <i class="fas fa-star"></i>
                     </div>
-                    <h3>🌟 星伴</h3>
+                    <h3>星伴</h3>
                     <p>让那个人"活"在对话里<br>用TA的说话风格陪你聊天<br>感到孤独或有话想说的时候</p>
                     <span class="mode-card-badge">适合：想再和她说说话</span>
                 </div>
@@ -51,7 +51,7 @@
                     <div class="mode-card-icon">
                         <i class="fas fa-compass"></i>
                     </div>
-                    <h3>🔍 星析</h3>
+                    <h3>星析</h3>
                     <p>帮你分析这段关系<br>为什么分开？还有没有可能？<br>接下来该怎么做？</p>
                     <span class="mode-card-badge">适合：需要分析和建议</span>
                 </div>
@@ -66,7 +66,7 @@
                     <i class="fas fa-star" id="mode-icon"></i>
                 </div>
                 <div class="chat-header-info">
-                    <h3 id="mode-title">🌟 星伴</h3>
+                    <h3 id="mode-title">星伴</h3>
                     <span class="persona-hint" id="persona-info">让那个人"活"在对话里</span>
                 </div>
                 <div class="chat-header-actions">
@@ -124,9 +124,9 @@
                 </div>
                 <div class="chat-input-footer">
                     <span class="chat-mode-indicator">
-                        <i class="fas fa-circle" style="color:#48bb78;font-size:0.55rem;"></i>
+                        <i class="fas fa-circle" style="color:var(--accent-teal);font-size:0.5rem;"></i>
                         <span id="mode-indicator">星伴在线</span>
-                        <span id="model-badge" style="background:#e8eaff;color:#5c6bcc;border-radius:4px;padding:1px 6px;font-size:0.7rem;margin-left:4px;cursor:pointer;" title="点击切换模型">🌐 DeepSeek</span>
+                        <span id="model-badge" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:0.65rem;margin-left:4px;cursor:pointer;" title="点击切换模型">🌐 DeepSeek</span>
                     </span>
                     <span class="char-count">
                         <span id="char-count">0</span>/500
@@ -141,16 +141,16 @@
                 <h3><i class="fas fa-star"></i> 使用帮助</h3>
                 
                 <div class="help-section">
-                    <h4>🌟 星伴</h4>
+                    <h4>星伴</h4>
                     <p>让那个人"活"在对话里。输入TA的星座、MBTI和信息，AI会模拟TA的说话风格陪你聊天。</p>
                 </div>
                 <div class="help-section">
-                    <h4>🔍 星析</h4>
+                    <h4>星析</h4>
                     <p>帮你分析这段关系。基于星座、MBTI和你的描述，分析分手原因、复合可能和行动建议。</p>
                 </div>
 
                 <div class="help-section">
-                    <h4>💡 使用技巧</h4>
+                    <h4>使用技巧</h4>
                     <ul>
                         <li><i class="fas fa-star"></i> 说得越多，AI越像那个人</li>
                         <li><i class="fas fa-file-alt"></i> 导入聊天记录效果更好</li>
@@ -158,8 +158,8 @@
                     </ul>
                 </div>
 
-                <div class="help-section warning">
-                    <h4>⚠️ 重要提示</h4>
+                <div class="help-section">
+                    <h4>重要提示</h4>
                     <ul>
                         <li><i class="fas fa-shield-alt"></i> 所有对话仅存储在你的设备上</li>
                         <li><i class="fas fa-heart"></i> 数星是情感陪伴工具，非专业心理咨询</li>
@@ -170,13 +170,13 @@
                     我知道了
                 </button>
                 
-                <div class="help-section" style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px;">
-                    <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;">
-                        <a href="profile.html" style="color:var(--primary);text-decoration:none;">
+                <div class="help-section" style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px;">
+                    <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;">
+                        <a href="profile.html" style="color:var(--primary-light);text-decoration:none;">
                             <i class="fas fa-cog"></i> 个人中心
                         </a>
                         &nbsp;·&nbsp;
-                        <a href="index.html" style="color:var(--primary);text-decoration:none;">
+                        <a href="index.html" style="color:var(--primary-light);text-decoration:none;">
                             <i class="fas fa-home"></i> 首页
                         </a>
                     </p>

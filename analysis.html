@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="人格洞察与分析 - 基于星座和MBTI的深度分析">
-    <meta name="theme-color" content="#7c8aff">
+    <meta name="theme-color" content="#7b79a0">
     <title>人格洞察 | 数星</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/components.css">
@@ -109,13 +109,15 @@
             padding: 6px 14px;
             border-radius: var(--radius-full);
             font-size: 0.82rem;
-            background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
             color: var(--primary-dark);
             font-weight: 500;
         }
         .tag-cloud .tag-item.weakness {
-            background: linear-gradient(135deg, #fef3c7, #fef9e7);
-            color: #92400e;
+            background: var(--bg-elevated);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
         }
 
         .traits-grid {
@@ -136,8 +138,8 @@
             font-size: 1.1rem;
             flex-shrink: 0;
         }
-        .trait-item.positive i { color: #48bb78; }
-        .trait-item.negative i { color: #f56565; }
+        .trait-item.positive i { color: var(--accent-teal); }
+        .trait-item.negative i { color: var(--accent-rose); }
 
         .action-bar {
             display: flex;
@@ -197,9 +199,9 @@
             font-size: 0.8rem;
         }
         .history-item .delete-btn:hover {
-            color: #f56565;
-            border-color: #fed7d7;
-            background: #fff5f5;
+            color: var(--accent-rose);
+            border-color: var(--accent-rose);
+            background: var(--bg-card);
         }
 
         .empty-state-custom {
@@ -255,7 +257,7 @@
             <!-- 当前人格模型 -->
             <div class="insight-card" id="current-profile-section">
                 <div class="card-header">
-                    <i style="background:linear-gradient(135deg,#7c8aff,#a8b2ff);color:white;">&#9733;</i>
+                    <i style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--primary-light);">&#9733;</i>
                     <div>
                         <h3>当前人格模型</h3>
                         <p>基于你设置的信息生成的深度分析</p>
@@ -273,7 +275,7 @@
                     <div class="profile-row" id="profile-summary"></div>
 
                     <!-- 组合洞察 -->
-                    <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#f8f9ff,#f0f2ff);border:1px solid var(--border);">
+                    <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg-elevated);border:1px solid var(--border);">
                         <div class="card-header" style="margin-bottom:12px;">
                             <i class="fas fa-star" style="color:var(--primary);font-size:1.2rem;"></i>
                             <h3 style="font-size:1rem;">人格组合</h3>
@@ -307,28 +309,28 @@
 
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;">
                         <!-- 优势 -->
-                        <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#f0fcf4,#e8faf0);border:1px solid #b7e4c7;">
+                        <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg-elevated);border:1px solid var(--accent-teal);">
                             <div class="card-header" style="margin-bottom:10px;">
-                                <i class="fas fa-check-circle" style="color:#48bb78;font-size:1.1rem;"></i>
-                                <h3 style="font-size:1rem;color:#2f6b48;">优势</h3>
+                                <i class="fas fa-check-circle" style="color:var(--accent-teal);font-size:1.1rem;"></i>
+                                <h3 style="font-size:1rem;color:var(--accent-teal);">优势</h3>
                             </div>
                             <div id="strengths-list"></div>
                         </div>
                         <!-- 弱点 -->
-                        <div class="insight-card" style="box-shadow:none;padding:20px;background:linear-gradient(135deg,#fff5f5,#fef2f2);border:1px solid #fed7d7;">
+                        <div class="insight-card" style="box-shadow:none;padding:20px;background:var(--bg-elevated);border:1px solid var(--accent-rose);">
                             <div class="card-header" style="margin-bottom:10px;">
-                                <i class="fas fa-exclamation-circle" style="color:#f56565;font-size:1.1rem;"></i>
-                                <h3 style="font-size:1rem;color:#9b2c2c;">可能的问题</h3>
+                                <i class="fas fa-exclamation-circle" style="color:var(--accent-rose);font-size:1.1rem;"></i>
+                                <h3 style="font-size:1rem;color:var(--accent-rose);">可能的问题</h3>
                             </div>
                             <div id="weaknesses-list"></div>
                         </div>
                     </div>
 
                     <!-- 疗愈建议 -->
-                    <div class="insight-card" style="background:linear-gradient(135deg,#e8f4ff,#f0f8ff);border:1px solid #b7daf9;">
+                    <div class="insight-card" style="background:var(--bg-elevated);border:1px solid var(--border);">
                         <div class="card-header" style="margin-bottom:12px;">
-                            <i class="fas fa-heartbeat" style="color:#3b82f6;font-size:1.2rem;"></i>
-                            <h3 style="font-size:1rem;">💝 疗愈与建议</h3>
+                            <i class="fas fa-heartbeat" style="color:var(--primary-light);font-size:1.2rem;"></i>
+                            <h3 style="font-size:1rem;">疗愈与建议</h3>
                         </div>
                         <p class="insight-text" id="insight-advice"></p>
                     </div>
@@ -350,7 +352,7 @@
             <!-- 历史模型 -->
             <div class="insight-card" id="history-section">
                 <div class="card-header">
-                    <i style="background:linear-gradient(135deg,#f6a5b8,#ffb3a0);color:white;">&#9801;</i>
+                    <i style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--accent-rose);">&#9801;</i>
                     <div>
                         <h3>历史模型</h3>
                         <p>之前创建和分析过的人格模型</p>
