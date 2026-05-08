@@ -77,11 +77,24 @@ window.autoDetectUserType = {
 
 // ===== 模型调度配置 =====
 // API key统一由 proxy-server.js 管理，前端不存key
+// ⚠️ 注意：GitHub Pages 无后端，自动降级为本地回复模式
 const AI_CONFIG = {
     baseURL: '',  // 留空走同域代理(/api/chat)
-    enabled: true,
+    enabled: true,  // 会被下方检测逻辑覆盖
     currentModel: 'deepseek'
 };
+
+// 自动检测环境：GitHub Pages → 强制本地模式（无后端API）
+(function() {
+    try {
+        var host = window.location.hostname;
+        // GitHub Pages / Vercel / Netlify 静态部署 → 无后端，用本地回复
+        if (host.includes('github.io') || host.includes('vercel.app') || host.includes('netlify.app')) {
+            AI_CONFIG.enabled = false;
+        }
+        // 如果 baseURL 非空（自建后端），保留 enabled 状态
+    } catch(e) {}
+})();
 
 // ===== 对话页全局状态 =====
 const CHAT_MODEL = { progressBar: null, progressText: null };
@@ -1043,6 +1056,8 @@ function updateModelProgressBar() {
     }
     
     // ===== AI流式调用（AbortController + 直接写入气泡） =====
+    // ===== streamAI — 流式获取AI回复 =====
+    // 如果API调用失败（GitHub Pages无后端），返回 null → sendMsg 会自动用本地回复替代
     async function streamAI(userInput, bubbleEl) {
         if (!AI_CONFIG.enabled) return null;
         
@@ -1124,20 +1139,13 @@ function updateModelProgressBar() {
             
         } catch (e) {
             if (e.name === 'AbortError') {
-                // 被用户新消息取消了, 不用fallback
+                // 被用户新消息取消了, 返回null让sendMsg走fallback
                 return null;
             }
-            // 流式失败 → 尝试非流式（不用创建新气泡，直接在同一个气泡里更新）
-            try {
-                pEl.textContent = '重试中...';
-                const fbRes = await tryFetch(false);
-                const fbData = await fbRes.json();
-                const reply = fbData.choices?.[0]?.message?.content?.trim();
-                if (reply) {
-                    pEl.textContent = reply;
-                    return reply;
-                }
-            } catch (e2) {}
+            // API调用失败 → 直接返回null，不重试
+            // sendMsg 会使用 generateLocalReply 作为本地备用回复
+            // 注意：不要再重试fetch，因为如果环境不支持（如GitHub Pages），重试也没用
+            console.warn('[streamAI] API调用失败:', e.message);
         }
         return null;
     }
