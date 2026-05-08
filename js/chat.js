@@ -256,6 +256,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // 检查URL参数：?mode=star 或 ?mode=analyze
         const urlParams = new URLSearchParams(window.location.search);
         const modeParam = urlParams.get('mode');
+        // ⚠️ 所有路径都必须执行的初始化（之前bug：mode参数导致return跳过了bindEvents等）
+        bindEvents();
+        loadChatHistory();
+        updateCharCount();
+        checkSetup();
+        updatePlaceholder();
+        updateDynamicQuickReplies();
+        createProgressBar();
+        
         if (modeParam === 'star' || modeParam === 'companion') {
             startMode('companion');
             return;
@@ -263,15 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
             startMode('counseling');
             return;
         }
-        
-        bindEvents();
-        loadChatHistory();
-        updateCharCount();
-        checkSetup();
-        updatePlaceholder();
-        updateDynamicQuickReplies();
-        // 创建进度条
-        createProgressBar();
         // 每日主动消息（文档8.1节：每天最多1条早安/关心）
         sendDailyActiveMessage();
         
