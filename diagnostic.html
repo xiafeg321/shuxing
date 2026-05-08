@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>数星诊断工具</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:sans-serif;background:#111;color:#ddd;padding:16px;max-width:600px;margin:0 auto}
+h1{color:#7b79a0;font-size:1.2rem}
+.card{background:#1a1a24;border:1px solid #333;border-radius:12px;padding:16px;margin:12px 0}
+.status{display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem}
+.pass{color:#8aacb0}
+.fail{color:#bd968c}
+button{background:#7b79a0;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;margin:4px}
+button:hover{background:#9b99b8}
+#test-output{font-size:0.8rem;color:#888;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+#chat-preview{border:1px solid #333;border-radius:8px;padding:10px;min-height:60px;margin:8px 0;background:#0c0c14}
+.msg{padding:6px 10px;margin:4px 0;border-radius:6px;font-size:0.85rem}
+.msg.user{background:#222;text-align:right}
+.msg.bot{background:#1a1a24;border:1px solid #333}
+input{width:100%;padding:8px;border:1px solid #333;border-radius:6px;background:#161621;color:#ddd;margin:4px 0;box-sizing:border-box}
+input:focus{outline:1px solid #7b79a0}
+</style>
+</head>
+<body>
+<h1>🔍 数星诊断工具</h1>
+<p style="font-size:0.82rem;color:#888">检查聊天功能是否正常</p>
+
+<div class="card">
+<div class="status"><span>📄 chat.js 加载</span><span id="check-chatjs" class="fail">检测中...</span></div>
+<div class="status"><span>📄 AI_CONFIG</span><span id="check-config" class="fail">检测中...</span></div>
+<div class="status"><span>📄 DOM元素</span><span id="check-dom" class="fail">检测中...</span></div>
+<div class="status"><span>📄 sendMsg函数</span><span id="check-sendmsg" class="fail">检测中...</span></div>
+<div class="status"><span>📄 addBotMessage</span><span id="check-addbot" class="fail">检测中...</span></div>
+<div class="status"><span>📄 localStorage</span><span id="check-storage" class="fail">检测中...</span></div>
+<div class="status"><span>🌐 GitHub Pages</span><span id="check-ghpages" class="fail">检测中...</span></div>
+</div>
+
+<button onclick="runDiagnostics()">▶ 运行诊断</button>
+<button onclick="testSend()">✉ 测试发送</button>
+
+<div id="chat-preview"></div>
+
+<input type="text" id="test-input" placeholder="输入测试消息..." value="你好">
+<button onclick="testSend()" style="width:100%;margin-top:4px">发送测试</button>
+
+<div id="test-output"></div>
+
+<script>
+function log(msg) {
+    const el = document.getElementById('test-output');
+    el.textContent += msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function updateStatus(id, pass, msg) {
+    const el = document.getElementById(id);
+    el.className = pass ? 'pass' : 'fail';
+    el.textContent = (pass ? '✅ ' : '❌ ') + (msg || '');
+}
+
+function runDiagnostics() {
+    log('=== 数星诊断 === ' + new Date().toLocaleTimeString());
+    
+    // 1. 检查 chat.js 是否加载
+    const hasChatJs = typeof addBotMessage === 'function' || 
+                       typeof sendMsg === 'function' ||
+                       typeof AI_CONFIG !== 'undefined';
+    updateStatus('check-chatjs', hasChatJs, hasChatJs ? '已加载' : '未加载');
+    log('chat.js: ' + (hasChatJs ? '✅ 已加载' : '❌ 未加载'));
+    
+    // 2. 检查 AI_CONFIG
+    if (typeof AI_CONFIG !== 'undefined') {
+        updateStatus('check-config', true, 'enabled=' + AI_CONFIG.enabled);
+        log('AI_CONFIG: enabled=' + AI_CONFIG.enabled + ', baseURL="' + AI_CONFIG.baseURL + '"');
+    } else {
+        updateStatus('check-config', false, 'AI_CONFIG未定义');
+        log('AI_CONFIG: ❌ 未定义');
+    }
+    
+    // 3. 检查 DOM
+    const doms = ['send-btn','message-input','chat-messages','mode-selection','chat-interface'];
+    let allFound = true;
+    doms.forEach(function(id) {
+        if (!document.getElementById(id)) {
+            log('DOM缺失: #' + id);
+            allFound = false;
+        }
+    });
+    updateStatus('check-dom', allFound, allFound ? doms.length+'/5 存在' : '有缺失');
+    
+    // 4. 检查函数
+    const fns = ['sendMsg','addBotMessage','addSystemMessage','hideTyping','addUserMessage'];
+    let fnFound = 0;
+    fns.forEach(function(fn) {
+        if (typeof window[fn] === 'function') fnFound++;
+        else log('函数缺失: ' + fn + '()');
+    });
+    updateStatus('check-sendmsg', fnFound === fns.length, fnFound+'/'+fns.length);
+    
+    // 5. 单独检查 addBotMessage
+    const hasAddBot = typeof addBotMessage === 'function';
+    updateStatus('check-addbot', hasAddBot, hasAddBot ? '存在' : '缺失');
+    
+    // 6. 检查 localStorage
+    try {
+        localStorage.setItem('_diag_test', 'ok');
+        localStorage.removeItem('_diag_test');
+        updateStatus('check-storage', true, '可用');
+    } catch(e) {
+        updateStatus('check-storage', false, '不可用: '+e.message);
+    }
+    
+    // 7. 检查是否为 GitHub Pages
+    const isGHPages = window.location.hostname.includes('github.io');
+    updateStatus('check-ghpages', true, isGHPages ? '是 (本地回复模式)' : '否');
+    log('环境: ' + window.location.hostname + (isGHPages ? ' (GitHub Pages)' : ''));
+    
+    log('--- 诊断完成 ---\n');
+    
+    // 直接测试发送
+    testDirectSend();
+}
+
+function testDirectSend() {
+    if (typeof sendMsg === 'function') {
+        log('✅ sendMsg() 可用，点击发送按钮试试');
+    } else {
+        log('❌ sendMsg() 不可用！需要排查chat.js加载');
+    }
+}
+
+function testSend() {
+    const input = document.getElementById('test-input');
+    const preview = document.getElementById('chat-preview');
+    const text = input.value.trim();
+    if (!text) { log('请输入消息'); return; }
+    
+    // 手动添加消息气泡（不依赖chat.js）
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg user';
+    userMsg.textContent = '👤 ' + text;
+    preview.appendChild(userMsg);
+    
+    // 尝试用 addBotMessage
+    if (typeof addBotMessage === 'function') {
+        addBotMessage(text);
+        log('✅ addBotMessage() 调用成功');
+    } else {
+        // 手动添加机器人回复
+        const botMsg = document.createElement('div');
+        botMsg.className = 'msg bot';
+        botMsg.textContent = '🤖 ' + text + '（本地测试回复）';
+        preview.appendChild(botMsg);
+        log('⚠️ addBotMessage() 不可用，使用手动回复');
+    }
+    
+    input.value = '';
+    preview.scrollTop = preview.scrollHeight;
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    setTimeout(runDiagnostics, 500);
+});
+</script>
+</body>
+</html>
