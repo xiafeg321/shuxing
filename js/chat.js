@@ -837,8 +837,9 @@ function updateModelProgressBar() {
     //      2. 确保 isWaiting 和 sendBtn.disabled 在异常路径也能恢复
     //      3. 不要在 sendMsg 外设置 sendBtn.disabled（由 sendMsg 统一管理）
     async function sendMsg() {
+        console.log('[sendMsg] 开始, useAPIModel=' + useAPIModel + ' isWaiting=' + isWaiting);
         const text = inputEl?.value.trim();
-        if (!text) return;
+        if (!text) { console.log('[sendMsg] 无文本'); return; }
         
         // 如果正在等待回复 → 取消旧的，发新的（覆盖式）
         if (isWaiting && currentAbortController) {
@@ -966,9 +967,11 @@ function updateModelProgressBar() {
         
         let reply = null;
         
+        console.log('[sendMsg] 模式=' + (useAPIModel ? 'API' : '本地') + ', 开始生成回复');
         try {
             if (useAPIModel) {
                 reply = await streamAI(text, streamBubble);
+                console.log('[sendMsg] API回复完成, reply=' + (reply ? reply.substring(0,30) + '...' : 'null'));
             } else {
                 clearInterval(dotTimer);
                 await new Promise(r => setTimeout(r, 300));
@@ -976,30 +979,39 @@ function updateModelProgressBar() {
             }
         } catch (e) {
             // 安全网：任何未捕获的异常都不会卡死按钮
-            console.warn('[sendMsg] 回复异常:', e);
+            console.warn('[sendMsg] ❌ 回复异常:', e.message);
+            console.warn('[sendMsg] stack:', e.stack);
             reply = null;
         }
         
         clearInterval(dotTimer);
+        console.log('[sendMsg] reply=' + (reply ? '有值' : 'null') + ', streamBubble存在=' + (!!streamBubble));
         
         // 移除流式光标，添加底部操作栏
         if (streamBubble && streamBubble.parentNode) {
             streamBubble.classList.remove('streaming');
+            console.log('[sendMsg] 准备显示回复');
             
             if (reply) {
                 var pEl = streamBubble.querySelector('p');
                 if (pEl) pEl.textContent = reply;
                 saveHistory({ type: 'bot', content: reply });
                 RHYTHM.track(reply);
+                console.log('[sendMsg] ✅ API回复已显示');
             } else {
+                console.log('[sendMsg] ⚠️ reply为空, 使用本地fallback');
                 const fallback = generateLocalReply(text);
+                console.log('[sendMsg] fallback生成完成: ' + (fallback ? fallback.substring(0,30) + '...' : 'null'));
                 var pEl = streamBubble.querySelector('p');
                 if (pEl) pEl.textContent = fallback || '嗯，我在听你说~';
-                saveHistory({ type: 'bot', content: fallback });
+                saveHistory({ type: 'bot', content: fallback || '嗯，我在听你说~' });
+                console.log('[sendMsg] ✅ 本地回复已显示');
             }
             
             // 添加消息底部操作栏
             addMessageFooter(streamBubble, 'bot');
+        } else {
+            console.log('[sendMsg] ❌ streamBubble不存在或已被移除');
         }
         
         scrollBottom();
@@ -1009,6 +1021,7 @@ function updateModelProgressBar() {
         if (sendBtn) {
             var inputEmpty = !inputEl || inputEl.value.trim().length === 0;
             sendBtn.disabled = inputEmpty;
+            console.log('[sendMsg] ✅ 发送完成, 按钮恢复, disabled=' + sendBtn.disabled);
         }
     }
     
