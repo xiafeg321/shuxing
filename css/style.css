@@ -1378,6 +1378,20 @@ body::after {
 }
 
 /* 柔和发光分隔线 */
+/* 危险重置按钮（全局） */
+.back-btn.danger-reset {
+    color: var(--accent-rose);
+    border-color: var(--accent-rose-dim);
+    text-decoration: none;
+}
+.back-btn.danger-reset:hover {
+    color: #e53e3e;
+    border-color: rgba(229, 62, 62, 0.3);
+    background: rgba(229, 62, 62, 0.08) !important;
+    text-decoration: none;
+}
+.back-btn.danger-reset i { font-size: 0.82rem; }
+
 .divider-soft {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);

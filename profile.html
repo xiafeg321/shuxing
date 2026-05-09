@@ -141,18 +141,6 @@
             .info-grid { grid-template-columns: 1fr 1fr; }
         }
 
-        /* 重置按钮（危险色） */
-        .back-btn.danger-reset {
-            color: var(--accent-rose);
-            border-color: var(--accent-rose-dim);
-        }
-        .back-btn.danger-reset:hover {
-            color: #e53e3e;
-            border-color: rgba(229, 62, 62, 0.3);
-            background: rgba(229, 62, 62, 0.08) !important;
-        }
-        .back-btn.danger-reset i { font-size: 0.82rem; }
-
         /* 确认弹窗 */
         .confirm-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -467,6 +455,17 @@
         var confirmBtn = document.getElementById('reset-confirm-btn');
 
         if (!resetBtn || !overlay) return;
+
+        // 从其他页面跳转过来时自动弹出
+        if (window.location.search.indexOf('action=reset') !== -1) {
+            // 清除 URL 参数，防止刷新重复弹窗
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            setTimeout(function() {
+                overlay.classList.add('show');
+            }, 300);
+        }
 
         // 打开弹窗
         resetBtn.addEventListener('click', function() {
