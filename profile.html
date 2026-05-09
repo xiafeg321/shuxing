@@ -141,6 +141,99 @@
             .info-grid { grid-template-columns: 1fr 1fr; }
         }
 
+        /* 重置按钮（危险色） */
+        .back-btn.danger-reset {
+            color: var(--accent-rose);
+            border-color: var(--accent-rose-dim);
+        }
+        .back-btn.danger-reset:hover {
+            color: #e53e3e;
+            border-color: rgba(229, 62, 62, 0.3);
+            background: rgba(229, 62, 62, 0.08) !important;
+        }
+        .back-btn.danger-reset i { font-size: 0.82rem; }
+
+        /* 确认弹窗 */
+        .confirm-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: none; align-items: center; justify-content: center;
+            padding: 24px;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 32px 24px 24px;
+            max-width: 380px; width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+            animation: scaleIn 0.25s var(--ease-out);
+        }
+        .confirm-modal .confirm-icon {
+            font-size: 40px;
+            color: var(--accent-rose);
+            margin-bottom: 16px;
+        }
+        .confirm-modal h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .confirm-modal p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+        .confirm-modal .confirm-warning {
+            font-size: 0.8rem;
+            color: var(--accent-rose);
+            padding: 8px 12px;
+            background: rgba(229, 62, 62, 0.06);
+            border: 1px solid rgba(229, 62, 62, 0.15);
+            border-radius: var(--radius-sm);
+            margin: 12px 0 20px;
+            line-height: 1.5;
+        }
+        .confirm-modal .confirm-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .confirm-modal .confirm-actions button {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+        .confirm-modal .btn-cancel {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        .confirm-modal .btn-cancel:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+        .confirm-modal .btn-destroy {
+            background: var(--accent-rose);
+            color: white;
+        }
+        .confirm-modal .btn-destroy:hover {
+            background: #d48074;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
         /* Toast */
         .profile-toast {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
@@ -158,10 +251,16 @@
     <div class="stars-container" id="stars-container"></div>
 
     <div class="container" style="max-width: 600px;">
-        <a href="index.html" class="back-btn" style="margin-bottom:12px;">
-            <i class="fas fa-arrow-left"></i>
-            返回首页
-        </a>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <a href="index.html" class="back-btn" style="margin-bottom:0;">
+                <i class="fas fa-arrow-left"></i>
+                返回首页
+            </a>
+            <button class="back-btn danger-reset" id="reset-all-btn" style="margin-bottom:0;margin-left:auto;color:var(--accent-rose);border-color:var(--accent-rose-dim);" title="重置全部数据">
+                <i class="fas fa-rotate-left"></i>
+                重置全部
+            </button>
+        </div>
 
         <div class="profile-page">
             <!-- 头部 -->
@@ -331,10 +430,76 @@
         </div>
     </div>
 
+    <!-- ===== 重置确认弹窗 ===== -->
+    <div class="confirm-overlay" id="reset-confirm-overlay">
+        <div class="confirm-modal">
+            <div class="confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>重置全部数据？</h3>
+            <p>这将清除所有已记录的信息：</p>
+            <div class="confirm-warning">
+                <i class="fas fa-times-circle" style="margin-right:4px;"></i>
+                MBTI · 星座 · 称呼 · 认识方式<br>
+                <i class="fas fa-times-circle" style="margin-right:4px;"></i>
+                人物模型 · 已收集信息 · 记忆<br>
+                <i class="fas fa-times-circle" style="margin-right:4px;"></i>
+                所有对话记录<br>
+                <span style="display:block;margin-top:6px;font-weight:600;">此操作不可撤销</span>
+            </div>
+            <div class="confirm-actions">
+                <button class="btn-cancel" id="reset-cancel-btn">取消</button>
+                <button class="btn-destroy" id="reset-confirm-btn">确认重置</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/star-effects.js"></script>
     <script src="js/personality-data.js"></script>
     <script src="js/character-model.js"></script>
     <script src="js/profile.js"></script>
+    <script>
+    // ===== 重置全部数据 =====
+    (function() {
+        var resetBtn = document.getElementById('reset-all-btn');
+        var overlay = document.getElementById('reset-confirm-overlay');
+        var cancelBtn = document.getElementById('reset-cancel-btn');
+        var confirmBtn = document.getElementById('reset-confirm-btn');
+
+        if (!resetBtn || !overlay) return;
+
+        // 打开弹窗
+        resetBtn.addEventListener('click', function() {
+            overlay.classList.add('show');
+        });
+
+        // 取消
+        cancelBtn.addEventListener('click', function() {
+            overlay.classList.remove('show');
+        });
+
+        // 点击遮罩关闭
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) overlay.classList.remove('show');
+        });
+
+        // 确认重置
+        confirmBtn.addEventListener('click', function() {
+            var keysToRemove = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (key && key.startsWith('shuxing_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+
+            overlay.classList.remove('show');
+            showToast('全部数据已重置 ✅ 页面即将刷新', 'success');
+            setTimeout(function() { location.reload(); }, 1200);
+        });
+    })();
+    </script>
     <script>
 function toggleActiveMessage() {
     var current = localStorage.getItem('shuxing_active_msg_enabled');
