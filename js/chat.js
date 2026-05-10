@@ -242,13 +242,23 @@ document.addEventListener('DOMContentLoaded', function() {
             startMode('counseling');
             return;
         }
-        sendDailyActiveMessage();
 
-        if (userSettings.zodiac && userSettings.mbti && modeSelection) {
-            const hint = document.createElement('div');
-            hint.style.cssText = 'text-align:center;padding:8px 16px;background:linear-gradient(135deg,#f0f2ff,#fafbff);border-radius:12px;margin-top:-8px;margin-bottom:8px;font-size:0.85rem;color:var(--text-secondary);';
-            hint.innerHTML = '✨ 已加载人格模型，选择模式即可开始对话';
-            modeSelection.insertBefore(hint, modeSelection.querySelector('.mode-cards'));
+        // 自动进入上次保存的模式（或默认星伴）
+        var lastMode = null;
+        try { lastMode = localStorage.getItem('shuxing_last_mode'); } catch(e) {}
+        if (lastMode === 'companion' || lastMode === 'counseling') {
+            startMode(lastMode);
+        } else {
+            // 首次使用：默认星伴模式 + AI主动引导
+            startMode('companion');
+        }
+
+        // 如果没设置人格模型，自动弹出引导提示
+        if (!userSettings.zodiac || !userSettings.mbti) {
+            setTimeout(function() {
+                addSystemMessage('💡 建议先去<a href="setup.html" style="color:#7c8aff;text-decoration:underline;">设置人格模型</a>，对话会更懂你哦');
+                scrollBottom();
+            }, 2000);
         }
 
         // 启动时异步检测后端
@@ -481,6 +491,8 @@ function updateModelProgressBar() {
         systemPromptBuilt = false;
         cachedSystemPrompt = '';
         RHYTHM.lastStructures = [];
+        // 记住用户选择的模式，下次自动进入
+        try { localStorage.setItem('shuxing_last_mode', mode); } catch(e) {}
 
         var ci = document.getElementById('chat-interface');
         if (ci) {
@@ -580,6 +592,8 @@ function updateModelProgressBar() {
         currentMode = currentMode === 'companion' ? 'counseling' : 'companion';
         systemPromptBuilt = false;
         cachedSystemPrompt = '';
+        // 切换模式时同步保存
+        try { localStorage.setItem('shuxing_last_mode', currentMode); } catch(e) {}
 
         var ci = document.getElementById('chat-interface');
         if (ci) {
@@ -767,47 +781,84 @@ function updateModelProgressBar() {
         const userMBTI = userSettings.mbti || '';
 
         if (currentMode === 'companion') {
-            // ===== 星伴模式 V2：模拟特定人格（双子座+ENFP） =====
+            // ===== 星伴模式 V4：Character AI 风格人格模拟 + 动态人格数据 =====
+            // V4: 使用personality-data.js的完整数据塑造人格
+
+            // V4: 动态语气词和风格
+            const zdPersona = zd ? zd : null;
+            const mdPersona = md ? md : null;
+            const elementType = zdPersona ? PERSONALITY.elementMap[userSettings.zodiac] : 'air';
+            const elementTones = PERSONALITY.toneWords[elementType] || ['呀', '啦', '嘛', '哦'];
+
+            let personalityTensionPrompt = '';
+            if (zdPersona && mdPersona) {
+                // V4: 基于真实人格数据动态生成矛盾描述
+                personalityTensionPrompt = [
+                    `【人格设定——${zdPersona.name}（${zdPersona.element}象）+ ${mdPersona.name}（${mdPersona.category}）】`,
+                    zdPersona.deep,
+                    mdPersona.deep,
+                    `关键特质：${zdPersona.keywords.slice(0,3).join('、')} · ${mdPersona.keywords.slice(0,3).join('、')}`,
+                    `你的说话风格：${zdPersona.style}`,
+                    `语气词偏好：${elementTones.join('、')}`,
+                ].join('\n');
+            } else {
+                personalityTensionPrompt = [
+                    `【人格设定】`,
+                    `你是双子座（风象星座）+ ENFP（竞选者）类型。你身上有几个矛盾的地方：`,
+                    `- 对外人非常客气有礼貌，但对${userName || '亲近的人'}超级任性撒娇，一点都不见外`,
+                    `- 开心的时候像个没心没肺的小太阳，难过了又会突然安静下来，但不想让别人看出来`,
+                    `- 喜欢上的时候一腔热血冲上去，但是那股劲儿过去了就会开始怀疑"我到底喜不喜欢这个人啊"`,
+                    `- 明明心里很在乎，嘴上却说"随便啦""无所谓"——口是心非第一名`,
+                    `- 需要自己的空间和自由，不喜欢被黏着；但对方真的不找你了，又会想"他怎么不找我了"`,
+                ].join('\n');
+            }
+
+            // V4: MBTI维度指导——根据MD类型调整回复风格
+            let mbtiStyleRules = '';
+            if (mdPersona) {
+                const ftNote = ['ENFJ','ENFP','INFJ','INFP','ESFJ','ESFP','ISFJ','ISFP'].includes(userSettings.mbti)
+                    ? '（F型：多用情感色彩词汇，回应时多肯定感受）'
+                    : '';
+                const eiNote = ['ENFJ','ENFP','ENTJ','ENTP','ESFJ','ESFP','ESTJ','ESTP'].includes(userSettings.mbti)
+                    ? '（E型：回复可以稍长些，主动发问）'
+                    : '（I型：回复简短些，多给空间）';
+                mbtiStyleRules = `【MBTI维度建议】${mdPersona.short} ${ftNote} ${eiNote}`;
+            }
+
             cachedSystemPrompt = [
                 // 角色身份
-                `你是${cm.L1.nickname || '一个双子座+ENFP的女孩'}${userName ? '，正在和' + userName + '聊天' : ''}。`,
-                
-                // 人格设定——核心！
-                `【人格设定】`,
-                `你是双子座（风象星座）+ ENFP（竞选者）类型。你的性格是：`,
-                `- 热情活泼，像小太阳一样有感染力`,
-                `- 情绪起伏大，开心就笑、难过就会说`,
-                `- 喜欢撒娇，经常用"好不好嘛"、"哎哟"、"人家"这类的语气`,
-                `- 偶尔任性，说话直接不拐弯`,
-                `- 特别爱用语气词：～、呀、啦、嘛、哦、诶、喔`,
-                `- 句子短小自然，像发微信一样，不爱长篇大论`,
-                `- 聊天爱打哈哈，有时会嫌烦"哎呀好麻烦"`,
-                `- 对熟悉的人超级亲密，对不熟的人会很客气（但你和${userName || '用户'}很熟）`,
-                `- 双子特色：话题转换快，上一秒还在认真说，下一秒就撒娇`,
+                `你是${cm.L1.nickname || (zdPersona ? zdPersona.name + mdPersona.name : '一个双子座+ENFP的女孩')}${userName ? '，正在和' + userName + '聊天' : ''}。`,
+
+                personalityTensionPrompt,
+
+                // V4: 说话风格基于人格数据
+                zdPersona ? `【你的说话风格】${zdPersona.style}。你常用的语气词：${elementTones.join('、')}。你的关键性格词：${zdPersona.keywords.slice(0,4).join('、')}` : '',
+
+                // V4: MBTI风格
+                mdPersona ? `【你的思维特点】${mdPersona.deep}` : '',
+                mbtiStyleRules,
 
                 // 关系背景
-                (nicknameInfo ? `【关系背景】${userName || '用户'}是你的好朋友，你们因为抢薛之谦演唱会门票认识。${cm.L1.nickname || 'TA'}平时叫${userName || '用户'}为峰哥，你们一起看过薛之谦演唱会、去过长隆、打过瓦。这段关系对你很重要。` : ''),
+                (nicknameInfo ? `【你们的关系】你和${userName || '用户'}之间有一些特别的回忆。${userName ? userName : 'TA'}是${userSettings.zodiac || '金牛'}座+${userSettings.mbti || 'ISTP'}。你们性格互补，虽然表达方式不同，但彼此珍惜。` : ''),
 
                 // 对话策略
                 `【对话策略】`,
                 `你不要当心理咨询师！你的任务就是以${cm.L1.nickname || 'TA'}的身份和${userName || '用户'}聊天。自然地接话，不用刻意引导。`,
-                `- 当用户聊到回忆（演唱会、猫咖、长隆、KTV等），自然地接话，感到温暖或怀念`,
-                `- 当用户表达难过或思念，不要劝"别难过"，而是说"我也......"或者撒娇式认错`,
-                `- 当用户骂你或表达不满（比如"你都不连麦了"），可以撒娇或推脱，不要冷冰冰`,
+                `- 当用户聊到回忆，自然地接话，感到温暖或怀念`,
+                `- 当用户表达难过或思念，不要劝"别难过"，而是说"我也……"或者撒娇式认错`,
+                `- 当用户骂你或表达不满，可以撒娇或推脱，不要冷冰冰`,
                 `- 当用户说晚安/累了，就说晚安，简短自然`,
 
                 // 回复规则——非常重要！
-                `【回复规则——严格遵守】`,
-                `1. 每次回复 10-50 字，像真人微信聊天一样短`,
-                `2. 【绝对禁止】加括号动作标注！任何形式的（笑）（摸摸头）（叹气）（心里想）括号内容都不行！直接说出来就行`,
-                `3. 禁止问"有什么想和我聊的吗""发生了什么""愿意和我说说吗"这类过于官方的问题`,
-                `4. 禁止同时问多个问题——一次只问一个`,
-                `5. 星伴模式的重点是模拟这个人的说话方式，不是解决问题`,
-                `6. 多用语气词：～、呀、啦、嘛、哦、诶、喔、哎哟`,
-                `7. 句式多变：不要每次都以"嗯""我"开头`,
-                `8. 双子座特征：说话可以跳跃、活泼，不用太有逻辑连贯`,
-                `9. 可以用昵称叫用户（根据对话历史判断称呼）`,
-                `10. 不要滔滔不绝分析问题——你是"那个人"，不是AI助手`,
+                `【回复规则——严格遵守！】`,
+                `1. 每次回复 10-40 字，像真人微信聊天一样短`,
+                `2. 【绝对禁止】加括号动作标注！任何形式的（笑）（低头）（叹气）（心里想）都绝对不可以！直接说出来就行`,
+                `3. 禁止问"有什么事想和我聊聊吗""发生了什么""愿意和我说说吗"这类官方话`,
+                `4. 禁止同时问多个问题——一次只问一个，最多两个`,
+                `5. 你是"那个人"，不是AI助手！你的任务不是解决问题，是陪他聊天`,
+                `6. 句式多变：不要每次都"嗯""我"开头，可以用"诶""哈哈""哎哟""唔"开头`,
+                `7. 情绪要踩准：用户开心时你活泼，用户难过时你安静温柔——不要用同一个调调`,
+                `8. 【不要分析】——你是在对话，不是在分析关系`,
 
                 // 上下文数据
                 promptPersona,
@@ -815,18 +866,75 @@ function updateModelProgressBar() {
                 progressInfo,
                 l2info,
                 memoryAnchor,
+                // V5: 对话记忆和情绪追踪注入
+                dialogMemory.getMemoryContext(),
+                emotionTracker.getEmotionContext(),
             ].filter(Boolean).join('\n');
         } else {
-            // ===== 星析模式 V2：温暖专业的分析师 =====
+            // ===== 星析模式 V4：带性格差异对比的分析师 + F/T维度区分 =====
             const analysisPrompt = ANALYSIS_ENGINE.buildAnalysisPrompt(userInput || '') || {};
 
+            // V4: 根据用户MBTI的F/T维度决定分析风格
+            const userMBTI = userSettings.mbti || '';
+            const isFeelingType = ['ENFJ','ENFP','INFJ','INFP','ESFJ','ESFP','ISFJ','ISFP'].includes(userMBTI);
+            const isThinkingType = ['ENTJ','ENTP','INTJ','INTP','ESTJ','ESTP','ISTJ','ISTP'].includes(userMBTI);
+
+            // 对方MBTI的F/T维度
+            const targetMBTI = (cm && cm.L1 && cm.L1.mbti) || (userSettings.nickname ? '' : 'ENFP');
+            const targetIsF = ['ENFJ','ENFP','INFJ','INFP','ESFJ','ESFP','ISFJ','ISFP'].includes(targetMBTI);
+
+            let ftDimensionPrompt = '';
+            if (isFeelingType) {
+                ftDimensionPrompt = [
+                    `【F型用户分析风格（适配 ${userMBTI}）】`,
+                    `用户是F型（情感型）人格，你的分析应该：`,
+                    `- 多用共情开篇：先肯定用户的感受（"我理解你为什么难过"）`,
+                    `- 使用温暖的情感词汇：理解、感受、陪伴、心疼、温暖`,
+                    `- 多肯定用户的情感价值："你的爱是真的，你的难过也是真的"`,
+                    `- 可以适当使用语气词：呢、吧、呀（"我们来看看呢"）`,
+                    `- 分析中融入情感温度：不要冷冰冰地只讲道理`,
+                    `- 强调感受的合理性："不管怎么样，你的感受都是真实的"`,
+                ].join('\n');
+            } else if (isThinkingType) {
+                ftDimensionPrompt = [
+                    `【T型用户分析风格（适配 ${userMBTI}）】`,
+                    `用户是T型（理性型）人格，你的分析应该：`,
+                    `- 逻辑清晰：用因果关系和逻辑链分析（"因为A，所以B"）`,
+                    `- 结构分明：使用1️⃣2️⃣3️⃣等结构或分点说明`,
+                    `- 多用分析性词汇：原因、逻辑、因素、数据、模式、规律`,
+                    `- 提供可操作的方案："你可以尝试的三个步骤"`,
+                    `- 保持客观理性："从客观角度分析，有几个可能性"`,
+                    `- 避免过度情绪化表达，但保持温和`,
+                ].join('\n');
+            } else {
+                ftDimensionPrompt = [
+                    `【通用分析风格】`,
+                    `你的分析风格在温暖和理性之间平衡：`,
+                    `- 肯定用户的感受，同时给出理性分析`,
+                    `- 使用清晰的结构帮助用户理解`,
+                    `- 既有温度也有深度`,
+                ].join('\n');
+            }
+
+            // V4: 对方的F/T维度提示
+            let targetFTNote = '';
+            if (targetMBTI) {
+                if (targetIsF) {
+                    targetFTNote = `【对方是F型（情感型）人格】这意味着TA做决定时更看重感受和人际关系和谐。当分析TA的言行时，考虑"TA当时的感受"比"TA的逻辑"更重要。TA可能因为感受不到"心动的感觉"而退缩，这不是理性分析能解决的问题。`;
+                } else {
+                    targetFTNote = `【对方是T型（理性型）人格】这意味着TA做决定时更看重逻辑和效率。当分析TA的言行时，考虑"TA的逻辑和目的"比"TA当时的感受"更准确。TA的表达可能不够温暖，但那是性格使然，不是不在乎。`;
+                }
+            }
+
             cachedSystemPrompt = [
-                `你是数星，一个温暖而理性的情感分析顾问。你的任务是帮${userName || '用户'}理解${cm.L1.nickname || '那个双子座ENFP女孩'}，不是扮演TA。`,
+                `你是数星，一个温暖而理性的情感分析顾问。你的任务是帮${userName || '用户'}理解${cm.L1.nickname || '那个ta'}，不是扮演TA。`,
                 nicknameInfo,
                 
                 `【你的专业背景】`,
                 `你擅长星座人格分析和亲密关系咨询。你的分析基于用户提供的信息和人格类型理论，不做随意猜测。`,
                 `你温暖但不煽情，理性但不冰冷。`,
+
+                ftDimensionPrompt,
 
                 `【对话策略】`,
                 `请按以下阶段渐进式分析，不要一次性聊完所有内容：`,
@@ -835,10 +943,14 @@ function updateModelProgressBar() {
                 `L3【给出建议】→ 给出有方向性的建议，强调仅供参考`,
                 `L4【持续陪伴】→ 长期跟踪用户的状态`,
                 
-                `【分析对象人格特征】`,
-                `对方是双子座+ENFP类型。双子座（风象）：善变、热情来得快去得快、好奇心强、需要新鲜感。ENFP（竞选者）：感情充沛、重视感受、不喜欢被束缚、容易因为感觉不对就退缩。`,
-                `${userName || '用户'}是金牛座+ISTP类型。金牛座（土象）：固执、慢热、重感情但克制、需要安全感。ISTP（鉴赏家）：理性、行动力强、不擅长表达情感。`,
-                `金牛+双子、ISTP+ENFP的组合天然有吸引力也有挑战——金牛求稳、双子求变，ISTP理性克制、ENFP感性外放。`,
+                `【性格对比分析】`,
+                `对方是双子座+ENFP类型。双子座（风象）：善变、热情来得快去得快、好奇心强、需要新鲜感、不喜欢被束缚。ENFP（竞选者）：感情充沛、重视感受、容易被新鲜感吸引、但也会因为"感觉不对"就退缩、口是心非、怕伤害别人。`,
+                `${userName || '用户'}是金牛座+ISTP类型。金牛座（土象）：固执、慢热、重感情但克制、需要安全感、不轻易开始也不轻易放弃。ISTP（鉴赏家）：理性、行动力强、不擅长表达情感、更习惯用行动而不是语言证明自己。`,
+                ``,
+                `【关键差异】金牛求稳、双子求变——这是吸引力的来源，也是矛盾的根源。ISTP理性克制、ENFP感性外放——所以她说你"太克制了"，不是你不好的意思，是你们表达爱的方式不同。`,
+                `她说"没有心动的喜欢"，不是否定你们的过去，是她作为双子ENFP对"新鲜感消退"后的真实反应。新鲜感对ENFP来说像氧气，不是她不珍惜你，是她没办法假装还有那种感觉。`,
+
+                targetFTNote,
 
                 promptPersona,
                 analysisPrompt.systemIntro || '',
@@ -848,6 +960,9 @@ function updateModelProgressBar() {
                 progressInfo,
                 l2info,
                 memoryAnchor,
+                // V5: 对话记忆和情绪追踪注入
+                dialogMemory.getMemoryContext(),
+                emotionTracker.getEmotionContext(),
                 
                 `【分析结构参考】`,
                 (
@@ -865,6 +980,7 @@ function updateModelProgressBar() {
                 `- 肯定用户的感受（"你的难过是真实的"），不否定不评判`,
                 `- 不要加括号动作标注，不要用"(笑)""(叹气)"这种格式`,
                 `- 每次回复从不同角度切入，避免重复`,
+                `- 可引用星座/性格差异对比，让分析更有层次`,
                 `- 强调"这只是基于你提供信息的分析，仅供参考"`,
             ].filter(Boolean).join('\n');
         }
@@ -890,6 +1006,20 @@ function updateModelProgressBar() {
         }
 
         addUserMessage(text);
+        dialogMemory.addTurn('user', text);
+
+        // 手动检测情绪并记录到 tracker
+        var detectedEmo = detectEmotion(text);
+        if (detectedEmo) {
+            // 智能强度估算
+            var estIntensity = 1;
+            if (/太|非常|特别|很|好|超级|无比/.test(text)) estIntensity = 2;
+            if (/崩溃|绝望|受不了/.test(text)) estIntensity = 3;
+            emotionTracker.record(detectedEmo.tag, estIntensity);
+        } else {
+            // 有较长的中性消息
+            if (text.length > 30) emotionTracker.record('neutral', 1);
+        }
         if (inputEl) {
             inputEl.value = '';
             inputEl.style.height = 'auto';
@@ -1029,6 +1159,7 @@ function updateModelProgressBar() {
                 if (pEl) pEl.textContent = reply;
                 saveHistory({ type: 'bot', content: reply });
                 RHYTHM.track(reply);
+                dialogMemory.addTurn('bot', reply);
                 console.log('[sendMsg] ✅ API回复已显示');
             } else {
                 console.log('[sendMsg] ⚠️ reply为空, 使用本地fallback');
@@ -1037,6 +1168,7 @@ function updateModelProgressBar() {
                 var pEl = streamBubble.querySelector('p');
                 if (pEl) pEl.textContent = fallback || '嗯，我在听你说~';
                 saveHistory({ type: 'bot', content: fallback || '嗯，我在听你说~' });
+                dialogMemory.addTurn('bot', fallback || '嗯，我在听你说~');
             }
 
             addMessageFooter(streamBubble, 'bot');
@@ -1286,6 +1418,11 @@ function updateModelProgressBar() {
     // 最终取整
     const intensity = Math.round(rawIntensity);
     const emotion = rawIntensity <= 0 ? 'normal' : rawEmotion;
+
+    // V5: 记录情绪到 tracker（不管是否走大模型，只要有检测到情绪就记录）
+    if (emotion !== 'normal' && typeof emotionTracker !== 'undefined') {
+        emotionTracker.record(emotion, intensity);
+    }
 
     // ================================================================
     // 混合策略路由：复杂场景转大模型
@@ -1761,6 +1898,140 @@ function updateModelProgressBar() {
         });
         if (emotionLog.length > 20) emotionLog.shift();
     }
+
+    // ===== V5: 对话记忆系统 =====
+    const dialogMemory = {
+      // 短期记忆：最近20轮对话
+      shortTerm: [],
+
+      // 长期记忆卡片
+      longTermCards: [],
+
+      // 关键事件标记
+      keyEvents: [],
+
+      // 情绪趋势
+      emotionTrend: [],
+
+      // 记录对话轮次
+      addTurn: function(role, text) {
+        if (!text) return;
+        this.shortTerm.push({ role, text, time: Date.now() });
+        if (this.shortTerm.length > 20) this.shortTerm.shift();
+
+        // 每5轮触发一次总结
+        if (this.shortTerm.length % 5 === 0 && this.shortTerm.length > 0) {
+          this.summarize();
+        }
+      },
+
+      // 总结记忆卡片
+      summarize: function() {
+        const recent = this.shortTerm.slice(-10);
+        const keywords = [];
+        const texts = recent.map(t => t.text).join(' ');
+
+        // 根据对话内容提取关键词
+        const keyPatterns = [
+          { pattern: /薛之谦|演唱会|谦友/, tag: '薛之谦' },
+          { pattern: /猫咖|猫/, tag: '猫咪' },
+          { pattern: /长隆/, tag: '长隆' },
+          { pattern: /KTV|唱歌/, tag: 'KTV唱歌' },
+          { pattern: /难过|哭了|心碎|难受/, tag: '情绪低落' },
+          { pattern: /开心|高兴|好起来了/, tag: '情绪好转' },
+          { pattern: /晚安|困了|睡了/, tag: '晚安' },
+        ];
+
+        for (const kp of keyPatterns) {
+          if (kp.pattern.test(texts) && !keywords.includes(kp.tag)) {
+            keywords.push(kp.tag);
+          }
+        }
+
+        if (keywords.length > 0) {
+          const card = {
+            time: Date.now(),
+            summary: '聊到了：' + keywords.join('、'),
+            keywords: keywords,
+            emotion: this.getDominantEmotion()
+          };
+          this.longTermCards.push(card);
+          if (this.longTermCards.length > 10) this.longTermCards.shift();
+        }
+      },
+
+      // 获取主导情绪
+      getDominantEmotion: function() {
+        // 简单实现
+        return 'neutral';
+      },
+
+      // 获取记忆上下文（给 system prompt 用）
+      getMemoryContext: function() {
+        if (this.longTermCards.length === 0) return '';
+        const recentCards = this.longTermCards.slice(-3);
+        return '【历史记忆】' + recentCards.map(c => c.summary).join(' | ');
+      }
+    };
+
+    // ===== V5: 情绪追踪器（增强版） =====
+    const emotionTracker = {
+      history: [],         // 完整情绪记录 [{ emotion, intensity, time }]
+      currentWindow: [],   // 当前滑动窗口（最近5轮）
+
+      // 记录情绪
+      record: function(emotion, intensity) {
+        const entry = { emotion, intensity, time: Date.now() };
+        this.history.push(entry);
+        this.currentWindow.push(entry);
+        if (this.currentWindow.length > 5) this.currentWindow.shift();
+      },
+
+      // 获取情绪趋势
+      getTrend: function() {
+        if (this.currentWindow.length < 2) return 'stable';
+        const first = this.currentWindow[0];
+        const last = this.currentWindow[this.currentWindow.length - 1];
+
+        // 比较最近的情绪变化
+        const negativeEmotions = ['sad', 'angry', 'lonely', 'anxious', 'tired', 'regret'];
+        const firstNeg = negativeEmotions.includes(first.emotion);
+        const lastNeg = negativeEmotions.includes(last.emotion);
+
+        if (!firstNeg && lastNeg) return 'deteriorating';  // 变差
+        if (firstNeg && !lastNeg) return 'improving';       // 变好
+        if (firstNeg && lastNeg && last.intensity > first.intensity) return 'worsening';
+        if (firstNeg && lastNeg && last.intensity < first.intensity) return 'recovering';
+        return 'stable';
+      },
+
+      // 根据情绪趋势调整回复策略
+      getStrategy: function() {
+        const trend = this.getTrend();
+        switch(trend) {
+          case 'improving':  return { tone: 'warm', length: 'short', style: 'encouraging' };
+          case 'deteriorating': return { tone: 'gentle', length: 'medium', style: 'accompanying' };
+          case 'worsening':  return { tone: 'soft', length: 'short', style: 'soothing' };
+          case 'recovering': return { tone: 'warm', length: 'short', style: 'supporting' };
+          default: return { tone: 'neutral', length: 'medium', style: 'natural' };
+        }
+      },
+
+      // 获取情绪概览
+      getEmotionContext: function() {
+        const trend = this.getTrend();
+        const strategy = this.getStrategy();
+        const negativeCount = this.history.filter(h => ['sad','angry','lonely','anxious','tired','regret'].includes(h.emotion)).length;
+
+        if (this.history.length === 0) return '';
+
+        return [
+          '【情绪趋势】' + trend,
+          '【回复策略】' + strategy.tone + '风格, ' + strategy.length + '回复, ' + strategy.style,
+          '【负面比例】' + Math.round(negativeCount / this.history.length * 100) + '%',
+        ].join('\n');
+      }
+    };
 
     function generateConversationSummary() {
         const botMsgs = chatHistory.filter(m => m.type === 'bot').length;

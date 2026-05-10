@@ -134,7 +134,7 @@
         /* 双功能入口（选择状态后显示） */
         .dual-entry {
             max-width: 520px; margin: 0 auto 28px;
-            display: none; animation: fadeInUp 0.6s ease;
+            display: block; animation: fadeInUp 0.6s ease;
         }
         .dual-entry .entry-cards { display: flex; flex-direction: column; gap: 12px; }
         .entry-card {
@@ -320,42 +320,7 @@
             </div>
         </div>
 
-        <!-- ===== 状态识别 ===== -->
-        <div class="state-selector" id="state-selector">
-            <h3>你现在的状态是？</h3>
-            <div class="state-options">
-                <div class="state-option" data-state="separation">
-                    <div class="icon-wrap purple"><i class="fas fa-heart"></i></div>
-                    <div class="info">
-                        <h4>我刚结束一段感情，想她</h4>
-                        <p>需要一个人陪我说说话，听听我的故事</p>
-                    </div>
-                </div>
-                <div class="state-option" data-state="confused">
-                    <div class="icon-wrap blue"><i class="fas fa-search"></i></div>
-                    <div class="info">
-                        <h4>我想搞清楚我们的关系</h4>
-                        <p>想分析为什么会分开，还有没有可能</p>
-                    </div>
-                </div>
-                <div class="state-option" data-state="relationship">
-                    <div class="icon-wrap orange"><i class="fas fa-handshake"></i></div>
-                    <div class="info">
-                        <h4>我们的关系遇到了一些问题</h4>
-                        <p>异地、争吵、变淡…不知道该怎么办</p>
-                    </div>
-                </div>
-                <div class="state-option" data-state="crush">
-                    <div class="icon-wrap pink"><i class="fas fa-star"></i></div>
-                    <div class="info">
-                        <h4>我在暗恋一个人，心里没底</h4>
-                        <p>想分析TA的心意，想知道该怎么做</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== 功能入口（选择状态后显示） ===== -->
+        <!-- ===== 功能入口 ===== -->
         <div class="dual-entry" id="dual-entry">
             <div class="entry-cards">
                 <a class="entry-card" id="entry-star" href="setup.html">
@@ -401,9 +366,7 @@
     <script src="js/main.js?20260508"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const stateOptions = document.querySelectorAll('.state-option');
-        const dualEntry = document.getElementById('dual-entry');
-        const disclaimer = document.getElementById('disclaimer-bar');
+        document.getElementById('disclaimer-bar').style.display = 'block';
 
         let hasSetup = false;
         try {
@@ -419,44 +382,18 @@
             }
         } catch(e) {}
 
-        stateOptions.forEach(function(opt) {
-            opt.addEventListener('click', function() {
-                const state = this.dataset.state;
-                const descStar = document.getElementById('entry-star-desc');
-                const descAnalyze = document.getElementById('entry-analyze-desc');
-
-                if (state === 'separation') {
-                    descStar.textContent = '想再和她说说话，用她的方式陪我聊聊天';
-                    descAnalyze.textContent = '帮我分析我们为什么会走到这一步';
-                } else if (state === 'confused') {
-                    descStar.textContent = '偶尔也想再听听她的声音';
-                    descAnalyze.textContent = '帮我搞清楚问题出在哪里，还有机会吗';
-                } else if (state === 'relationship') {
-                    descStar.textContent = '想有人理解我的处境和感受';
-                    descAnalyze.textContent = '帮我们做一次关系诊断';
-                } else if (state === 'crush') {
-                    descStar.textContent = '想预演一下和TA聊天的感觉';
-                    descAnalyze.textContent = '帮我看懂TA的心意和信号';
-                }
-
-                localStorage.setItem('shuxing_user_state', state);
-
-                if (hasSetup) {
-                    document.getElementById('entry-star').href = 'chat.html?mode=star';
-                    document.getElementById('entry-analyze').href = 'chat.html?mode=analyze';
-                    document.getElementById('entry-star').querySelector('.info h3').textContent = '星伴 · 开始对话';
-                    document.getElementById('entry-analyze').querySelector('.info h3').textContent = '星析 · 开始分析';
-                    document.getElementById('hint-text').textContent = '现在就可以开始啦 ✦';
-                }
+        // 已设置人格 → 直接进对话；未设置 → 去设置
+        if (hasSetup) {
+            document.getElementById('entry-star').href = 'chat.html?mode=star';
+            document.getElementById('entry-analyze').href = 'chat.html?mode=analyze';
+            document.getElementById('entry-star').querySelector('.info h3').textContent = '星伴 · 开始对话';
+            document.getElementById('entry-analyze').querySelector('.info h3').textContent = '星析 · 开始分析';
+            document.getElementById('hint-text').textContent = '现在就可以开始啦 ✦';
+        }
 
                 stateOptions.forEach(function(o) { o.style.borderColor = 'var(--border)'; });
                 this.style.borderColor = 'var(--border-hover)';
                 dualEntry.style.display = 'block';
-                dualEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                disclaimer.style.display = 'block';
-            });
-        });
-    });
     </script>
 
 <script>

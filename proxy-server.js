@@ -244,6 +244,134 @@ class ModelScheduler {
 }
 
 // ====================================================================
+// 智能路由：消息分析 + 模型选择策略
+// ====================================================================
+
+const MODEL_PRICING = {
+  deepseek: { cost: 'medium', empathy: 3, analysis: 4, speed: 4 },
+  qwen:     { cost: 'medium', empathy: 4, analysis: 3, speed: 3 },
+  moonshot: { cost: 'cheap',  empathy: 3, analysis: 3, speed: 5 },
+};
+
+/**
+ * 分析消息情感强度（简单关键词检测）
+ * @param {string} text - 用户消息
+ * @returns {{ intensity: string, emotion: string, length: string, categories: string[] }}
+ */
+function analyzeMessage(text) {
+  if (!text || typeof text !== 'string') {
+    return { intensity: 'low', emotion: 'neutral', length: 'short', categories: [] };
+  }
+
+  const lower = text.toLowerCase();
+
+  // 情感强度判断
+  const highIntensityWords = [
+    '崩溃', '绝望', '想死', '活不下去了', '受不了', '痛不欲生', '生不如死',
+    '心碎', '撕心裂肺', '痛哭', '大哭', '泣不成声', '要疯了',
+    '杀', '死', '自杀', '毁灭',
+  ];
+  const midIntensityWords = [
+    '难过', '伤心', '痛苦', '难受', '想哭', '郁闷', '失落',
+    '生气', '愤怒', '烦', '讨厌', '焦虑', '不安', '害怕', '担心',
+    '孤单', '寂寞', '孤独', '迷茫', '困惑', '纠结',
+    '后悔', '遗憾', '疲惫', '心累', '累了',
+    '思念', '想念', '想她', '想他',
+  ];
+
+  let intensity = 'low';
+  let highCount = 0, midCount = 0;
+
+  for (const word of highIntensityWords) {
+    if (lower.includes(word)) highCount++;
+  }
+  for (const word of midIntensityWords) {
+    if (lower.includes(word)) midCount++;
+  }
+
+  if (highCount > 0 || midCount >= 4) {
+    intensity = 'high';
+  } else if (midCount >= 2 || (midCount === 1 && text.length > 50)) {
+    intensity = 'medium';
+  }
+
+  // 情绪类型检测
+  const emotionPatterns = [
+    { type: 'sad', words: ['难过', '伤心', '痛苦', '难受', '想哭', '心碎', '崩溃', '绝望', '悲伤', '失落', '郁闷'] },
+    { type: 'angry', words: ['生气', '愤怒', '烦死了', '好烦', '烦人', '讨厌', '恼火', '不爽', '炸了'] },
+    { type: 'lonely', words: ['孤单', '孤独', '寂寞', '一个人', '没人陪', '空虚', '冷清'] },
+    { type: 'anxious', words: ['焦虑', '不安', '紧张', '害怕', '担心', '慌', '睡不着', '失眠'] },
+    { type: 'sad', words: ['想她', '想他', '思念', '想念', '好想'] },
+  ];
+
+  let detectedEmotion = 'neutral';
+  for (const ep of emotionPatterns) {
+    for (const word of ep.words) {
+      if (lower.includes(word)) {
+        detectedEmotion = ep.type;
+        break;
+      }
+    }
+    if (detectedEmotion !== 'neutral') break;
+  }
+
+  // 分析类关键词
+  const analysisWords = ['分析', '评估', '总结', '诊断', '为什么', '原因', '可能性', '怎么看', '怎么想', '帮我想', '你觉得'];
+  const hasAnalysis = analysisWords.some(w => lower.includes(w));
+
+  // 消息长度
+  const length = text.length <= 20 ? 'short' : text.length <= 80 ? 'medium' : 'long';
+
+  return {
+    intensity,
+    emotion: detectedEmotion,
+    length,
+    categories: [
+      ...(hasAnalysis ? ['analysis'] : []),
+      ...(['sad', 'lonely', 'anxious'].includes(detectedEmotion) ? ['high-empathy'] : []),
+    ],
+    textLength: text.length,
+  };
+}
+
+/**
+ * 智能路由：根据消息分析选择最适合的模型
+ * @param {Object} analysis - analyzeMessage 的返回值
+ * @returns {string[]} 按优先级排序的模型 ID 列表
+ */
+function routeModel(analysis) {
+  const { intensity, emotion, length, categories } = analysis;
+
+  // 高情感强度 + 悲伤/孤独 → 需要共情强的模型（Qwen: empathy=4）
+  if (intensity === 'high' && ['sad', 'lonely', 'anxious'].includes(emotion)) {
+    return ['qwen', 'deepseek', 'moonshot'];
+  }
+
+  // 分析请求 → 分析能力强的模型（DeepSeek: analysis=4）
+  if (categories.includes('analysis')) {
+    return ['deepseek', 'qwen', 'moonshot'];
+  }
+
+  // 高情感强度 + 其他 → 均衡模型
+  if (intensity === 'high') {
+    return ['deepseek', 'qwen', 'moonshot'];
+  }
+
+  // 中情感强度 + 日常 → DeepSeek（均衡）
+  if (intensity === 'medium') {
+    return ['deepseek', 'qwen', 'moonshot'];
+  }
+
+  // 低情感强度 + 短消息 → Moonshot（便宜快速）
+  if (intensity === 'low' && length === 'short') {
+    return ['moonshot', 'deepseek', 'qwen'];
+  }
+
+  // 默认：DeepSeek
+  return ['deepseek', 'qwen', 'moonshot'];
+}
+
+// ====================================================================
 // HTTP 辅助函数：支持 HTTP 和 HTTPS
 // ====================================================================
 
@@ -313,154 +441,206 @@ const server = http.createServer((req, res) => {
         const requestData = JSON.parse(body);
         const useStream = requestData.stream !== false;
 
-        const selection = scheduler.selectModel(req);
+        // ===== 智能路由：先分析用户消息，选择最佳模型 =====
+        // 从消息中提取用户输入（最后一条 user 消息）
+        const userMessages = requestData.messages
+          ? requestData.messages.filter(m => m.role === 'user')
+          : [];
+        const latestUserMsg = userMessages.length > 0
+          ? userMessages[userMessages.length - 1].content || ''
+          : '';
 
-        if (selection.error) {
-          log('ERROR', selection.error);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              error: true,
-              fallback: true,
-              message: selection.error,
-            })
-          );
-          return;
+        const analysis = analyzeMessage(latestUserMsg);
+        const routeOrder = routeModel(analysis);
+
+        // 如果前端指定了模型 provider，优先使用
+        const specifiedProvider = req.headers['x-model-provider'];
+        if (specifiedProvider && scheduler.adapters[specifiedProvider]) {
+          routeOrder.unshift(specifiedProvider);
         }
 
-        const { modelId, config, adapter } = selection;
-        log('API', `→ 使用模型: ${config.name} | 任务: ${req.headers['x-task-tier'] || 'simple'}`);
+        log('API', `路由: ${JSON.stringify(routeOrder)} | 情感: ${analysis.intensity}/${analysis.emotion} | 长: ${analysis.length}`);
 
-        adapter
-          .chat({
-            messages: requestData.messages,
-            temperature: requestData.temperature ?? 0.8,
-            maxTokens: requestData.max_tokens || 300,
-            stream: useStream,
-          })
-          .then((opts) => {
-            const proto = requestAdapter(opts);
+        // ===== 级联推理：按优先级依次尝试模型 =====
+        async function tryModels(modelIds, index) {
+          if (index >= modelIds.length) {
+            // 所有模型都失败了
+            return { error: true, message: '所有模型均不可用' };
+          }
+
+          const mid = modelIds[index];
+          const config = MODEL_CONFIGS[mid];
+          const adapter = scheduler.adapters[mid];
+
+          if (!config || !adapter || !config.enabled) {
+            log('WARN', `模型 ${mid} 不可用，尝试下一个`);
+            return tryModels(modelIds, index + 1);
+          }
+
+          log('API', `→ 尝试模型 #${index + 1}: ${config.name} | 情感: ${analysis.intensity}/${analysis.emotion} | 情: ${analysis.emotion}`);
+
+          try {
+            const opts = await adapter.chat({
+              messages: requestData.messages,
+              temperature: requestData.temperature ?? 0.8,
+              maxTokens: requestData.max_tokens || 300,
+              stream: useStream,
+            });
 
             if (useStream) {
-              // ===== 流式输出 =====
-              res.writeHead(200, {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-                'X-Accel-Buffering': 'no',
-              });
-
-              const apiReq = proto.request(opts, (apiRes) => {
-                let fullContent = '';
-                let buffer = '';
-
-                apiRes.on('data', (chunk) => {
-                  buffer += chunk.toString();
-                  const lines = buffer.split('\n');
-                  buffer = lines.pop() || '';
-
-                  for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (!trimmed || !trimmed.startsWith('data: ')) continue;
-
-                    const dataStr = trimmed.substring(6);
-                    if (dataStr === '[DONE]') {
-                      res.write(`data: [DONE]\n\n`);
-                      return;
-                    }
-
-                    try {
-                      const data = JSON.parse(dataStr);
-                      const delta =
-                        data.choices?.[0]?.delta?.content ||
-                        data.choices?.[0]?.text ||
-                        '';
-                      if (delta) {
-                        fullContent += delta;
-                        res.write(
-                          `data: ${JSON.stringify({ content: delta })}\n\n`
-                        );
-                      }
-                    } catch (e) {
-                      // 跳过解析错误行
-                    }
-                  }
+              return await new Promise((resolve, reject) => {
+                const proto = requestAdapter(opts);
+                res.writeHead(200, {
+                  'Content-Type': 'text/event-stream',
+                  'Cache-Control': 'no-cache',
+                  'Connection': 'keep-alive',
+                  'X-Accel-Buffering': 'no',
+                  'X-Route-Model': config.name,
+                  'X-Route-Analysis': `${analysis.intensity}/${analysis.emotion}`,
                 });
 
-                apiRes.on('end', () => {
+                const apiReq = proto.request(opts, (apiRes) => {
+                  let fullContent = '';
+                  let buffer = '';
+
+                  apiRes.on('data', (chunk) => {
+                    buffer += chunk.toString();
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                      const trimmed = line.trim();
+                      if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+                      const dataStr = trimmed.substring(6);
+                      if (dataStr === '[DONE]') {
+                        res.write(`data: [DONE]\n\n`);
+                        return;
+                      }
+
+                      try {
+                        const data = JSON.parse(dataStr);
+                        const delta =
+                          data.choices?.[0]?.delta?.content ||
+                          data.choices?.[0]?.text ||
+                          '';
+                        if (delta) {
+                          fullContent += delta;
+                          res.write(
+                            `data: ${JSON.stringify({ content: delta })}\n\n`
+                          );
+                        }
+                      } catch (e) {}
+                    }
+                  });
+
+                  apiRes.on('end', () => {
+                    res.write(`data: [DONE]\n\n`);
+                    res.end();
+                    log('API', `流式完成 ✅ (${fullContent.length}字 | ${config.name})`);
+                    resolve({ ok: true, model: config.name });
+                  });
+                });
+
+                apiReq.on('error', (e) => {
+                  log('WARN', `模型 ${config.name} 流式失败: ${e.message}，降级`);
+                  // 流式失败无法恢复，返回前端错误
+                  res.write(
+                    `data: ${JSON.stringify({ error: true, message: e.message, fallback: true })}\n\n`
+                  );
                   res.write(`data: [DONE]\n\n`);
                   res.end();
-                  log('API', `流式完成 ✅ (${fullContent.length}字 | ${config.name})`);
+                  resolve({ error: true, message: e.message });
                 });
-              });
 
-              apiReq.on('error', (e) => {
-                log('ERROR', `流式请求失败: ${config.name} - ${e.message}`);
-                res.write(
-                  `data: ${JSON.stringify({ error: true, message: e.message })}\n\n`
-                );
-                res.write(`data: [DONE]\n\n`);
-                res.end();
-              });
+                apiReq.on('timeout', () => {
+                  apiReq.destroy();
+                  log('WARN', `模型 ${config.name} 超时，降级`);
+                  res.write(
+                    `data: ${JSON.stringify({ error: true, message: '请求超时', fallback: true })}\n\n`
+                  );
+                  res.write(`data: [DONE]\n\n`);
+                  res.end();
+                  resolve({ error: true, message: '超时' });
+                });
 
-              apiReq.on('timeout', () => {
-                apiReq.destroy();
-                res.write(
-                  `data: ${JSON.stringify({ error: true, message: '请求超时' })}\n\n`
-                );
-                res.write(`data: [DONE]\n\n`);
-                res.end();
+                apiReq.write(opts.postData);
+                apiReq.end();
               });
-
-              apiReq.write(opts.postData);
-              apiReq.end();
             } else {
-              // ===== 非流式 =====
-              const apiReq = proto.request(opts, (apiRes) => {
-                let data = '';
-                apiRes.on('data', (chunk) => (data += chunk));
-                apiRes.on('end', () => {
-                  res.writeHead(200, {
-                    'Content-Type': 'application/json; charset=utf-8',
+              // ===== 非流式（含级联降级 + 上游 API 错误检测） =====
+              const result = await new Promise((resolve) => {
+                const proto = requestAdapter(opts);
+                const timeoutId = setTimeout(() => {
+                  apiReq.destroy();
+                  resolve({ error: true, message: '超时' });
+                }, 25000);
+
+                const apiReq = proto.request(opts, (apiRes) => {
+                  let data = '';
+                  apiRes.on('data', (chunk) => (data += chunk));
+                  apiRes.on('end', () => {
+                    clearTimeout(timeoutId);
+                    // 检查上游 API 是否返回了错误
+                    try {
+                      const parsed = JSON.parse(data);
+                      if (parsed.error) {
+                        const errMsg = typeof parsed.error === 'string' ? parsed.error :
+                          (parsed.error.message || JSON.stringify(parsed.error));
+                        resolve({ error: true, message: errMsg, data });
+                      } else {
+                        resolve({ ok: true, data, model: config.name });
+                      }
+                    } catch (parseErr) {
+                      // 返回原始数据（可能是非 JSON 格式，直接返回给前端）
+                      resolve({ ok: true, data, model: config.name });
+                    }
                   });
-                  res.end(data);
                 });
+
+                apiReq.on('error', (e) => {
+                  clearTimeout(timeoutId);
+                  resolve({ error: true, message: e.message });
+                });
+
+                apiReq.write(opts.postData);
+                apiReq.end();
               });
 
-              apiReq.on('error', (e) => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(
-                  JSON.stringify({
-                    error: true,
-                    fallback: true,
-                    message: e.message,
-                  })
-                );
-              });
-
-              apiReq.on('timeout', () => {
-                apiReq.destroy();
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(
-                  JSON.stringify({ error: true, fallback: true, message: '超时' })
-                );
-              });
-
-              apiReq.write(opts.postData);
-              apiReq.end();
+              if (result.ok) {
+                res.writeHead(200, {
+                  'Content-Type': 'application/json; charset=utf-8',
+                  'X-Route-Model': config.name,
+                });
+                res.end(result.data);
+                log('API', `非流式完成 ✅ (${config.name})`);
+                return { ok: true, model: config.name };
+              } else {
+                log('WARN', `模型 ${config.name} 失败: ${result.message}，降级到下一个`);
+                return tryModels(modelIds, index + 1);
+              }
             }
-          })
-          .catch((e) => {
-            log('ERROR', `适配器错误: ${config.name} - ${e.message}`);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(
-              JSON.stringify({
+          } catch (e) {
+            log('WARN', `模型 ${config.name} 异常: ${e.message}，降级`);
+            return tryModels(modelIds, index + 1);
+          }
+        }
+
+        // 启动级联推理
+        tryModels(routeOrder, 0).then((result) => {
+          if (result && result.error) {
+            log('ERROR', `所有模型均失败: ${result.message}`);
+            // 如果还没有响应过（非流式模式下的终极失败）
+            try {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
                 error: true,
                 fallback: true,
-                message: e.message,
-              })
-            );
-          });
+                message: '所有模型均不可用，请检查后端配置',
+              }));
+            } catch (e) {}
+          }
+        });
       } catch (e) {
         log('ERROR', `请求解析失败: ${e.message}`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -480,6 +660,12 @@ const server = http.createServer((req, res) => {
         requests: requestCount,
         memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
         models: scheduler.getStatus(),
+        routing: {
+          active: true,
+          strategy: '情感强度分析 + 级联降级',
+          preference: { low: 'moonshot', medium: 'deepseek', high: 'qwen' },
+          pricing: MODEL_PRICING,
+        },
         note: 'API Key 通过环境变量配置：QWEN_API_KEY / MOONSHOT_API_KEY / DEEPSEEK_API_KEY',
       })
     );
