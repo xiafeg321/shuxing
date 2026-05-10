@@ -19,7 +19,7 @@ window.MODEL_SCHEDULER = {
       name: 'DeepSeek V4',
       provider: 'deepseek',
       enabled: true,
-      apiKey: 'sk-f01481a824b243b28999980106c876c8',  // ✅ 已配置
+      apiKey: '', // API key 由后端 proxy-server 管理（环境变量）
       baseURL: '',
       modelName: 'deepseek-chat',
       tier: ['simple', 'medium', 'deep'],  // 全能型，所有任务都能跑
